@@ -1,0 +1,166 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Método de la Baraja</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body class="bg-gradient-to-br from-gray-900 via-gray-800 to-gray-900 text-white flex flex-col items-center justify-center min-h-screen p-4">
+
+  <div class="text-center mb-6">
+    <!-- Inspiring Graphic -->
+    <div class="text-6xl mb-4 text-yellow-300">
+      💪
+    </div>
+    <h1 class="text-4xl font-bold mb-2 text-blue-400">Método de la Baraja</h1>
+    <p class="text-gray-300">Selecciona un nivel de dificultad y comienza a entrenar con la baraja.</p>
+  </div>
+
+  <div class="flex flex-col items-center">
+    <!-- Difficulty Selection -->
+    <div class="mb-6">
+      <label for="difficulty" class="text-lg font-semibold">Nivel de dificultad:</label>
+      <select id="difficulty" class="ml-2 p-2 rounded bg-gray-700 text-white shadow-lg">
+        <option value="12">Fácil (12 cartas)</option>
+        <option value="24">Medio (24 cartas)</option>
+        <option value="36">Difícil (36 cartas)</option>
+        <option value="48">Máster (48 cartas)</option>
+      </select>
+    </div>
+
+    <!-- Card Deck Display -->
+    <div class="flex items-center space-x-6">
+      <!-- Remaining Cards -->
+      <div>
+        <h3 class="text-xl font-semibold text-gray-300 mb-2">Mazo</h3>
+        <div id="deck" class="w-20 h-32 bg-gray-700 flex items-center justify-center rounded shadow-lg">
+          <span class="text-4xl font-bold">🂠</span>
+        </div>
+      </div>
+      <!-- Drawn Cards -->
+      <div>
+        <h3 class="text-xl font-semibold text-gray-300 mb-2">Cartas sacadas</h3>
+        <div id="drawn-cards" class="flex flex-wrap gap-2 w-64 h-40 overflow-y-auto bg-gray-800 p-2 rounded shadow-lg"></div>
+      </div>
+    </div>
+
+    <!-- Repetitions Counter -->
+    <div class="mt-6">
+      <h3 class="text-2xl font-bold text-yellow-300">Repeticiones: <span id="reps-counter">0</span></h3>
+    </div>
+
+    <!-- Controls -->
+    <div class="mt-6">
+      <button id="draw-card" class="bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600 mr-2 shadow-lg">Sacar Carta</button>
+      <button id="restart" class="bg-red-500 text-white px-4 py-2 rounded hover:bg-red-600 shadow-lg">Reiniciar</button>
+    </div>
+  </div>
+
+  <script>
+    // Generate a deck of cards
+    const suits = ['♠', '♥', '♣', '♦'];
+    const ranks = ['2', '3', '4', '5', '6', '7', '8', '9', '10', 'J', 'Q', 'K', 'A'];
+    let fullDeck = [];
+    let totalReps = 0;
+
+    const deckElement = document.getElementById('deck');
+    const drawnCardsElement = document.getElementById('drawn-cards');
+    const drawCardButton = document.getElementById('draw-card');
+    const restartButton = document.getElementById('restart');
+    const difficultySelector = document.getElementById('difficulty');
+    const repsCounter = document.getElementById('reps-counter');
+
+    function createDeck() {
+      fullDeck = [];
+      suits.forEach(suit => {
+        ranks.forEach(rank => {
+          fullDeck.push(`${rank}${suit}`);
+        });
+      });
+    }
+
+    function shuffleDeck(deck) {
+      for (let i = deck.length - 1; i > 0; i--) {
+        const j = Math.floor(Math.random() * (i + 1));
+        [deck[i], deck[j]] = [deck[j], deck[i]];
+      }
+    }
+
+    function calculateReps(rank) {
+      if (rank === 'A') return 1;
+      if (rank === 'J') return 11;
+      if (rank === 'Q') return 12;
+      if (rank === 'K') return 13;
+      return parseInt(rank, 10);
+    }
+
+    let currentDeck = [];
+
+    function initializeGame() {
+      const numCards = parseInt(difficultySelector.value, 10);
+      createDeck();
+      shuffleDeck(fullDeck);
+      currentDeck = fullDeck.slice(0, numCards);
+      drawnCardsElement.innerHTML = '';
+      totalReps = 0;
+      repsCounter.textContent = totalReps;
+      updateDeckDisplay();
+    }
+
+    function updateDeckDisplay() {
+      if (currentDeck.length === 0) {
+        deckElement.innerHTML = '<span class="text-4xl font-bold">Vacío</span>';
+      } else {
+        deckElement.innerHTML = '<span class="text-4xl font-bold">🂠</span>';
+      }
+    }
+
+    drawCardButton.addEventListener('click', () => {
+      if (currentDeck.length > 0) {
+        const card = currentDeck.pop();
+
+        // Extract rank and suit
+        const rank = card.slice(0, -1);
+        const suit = card.slice(-1);
+
+        // Create the new card element
+        const cardElement = document.createElement('div');
+        cardElement.innerHTML = `<span class="font-bold">${rank}</span><span>${suit}</span>`;
+        cardElement.className = 'w-10 h-14 flex flex-col items-center justify-center bg-gray-700 text-white rounded shadow transition';
+
+        // Highlight the new card and unhighlight the previous one
+        const previousHighlighted = drawnCardsElement.querySelector('.highlight');
+        if (previousHighlighted) {
+          previousHighlighted.classList.remove('highlight');
+          previousHighlighted.classList.add('bg-gray-700', 'text-white');
+          previousHighlighted.classList.remove('bg-white', 'text-black');
+        }
+        cardElement.classList.add('highlight');
+        cardElement.classList.add('bg-white', 'text-black');
+
+        // Append the new card and scroll to the bottom
+        drawnCardsElement.appendChild(cardElement);
+        drawnCardsElement.scrollTop = drawnCardsElement.scrollHeight;
+
+        // Update repetitions
+        totalReps += calculateReps(rank);
+        repsCounter.textContent = totalReps;
+
+        updateDeckDisplay();
+      } else {
+        alert('No quedan más cartas en el mazo.');
+      }
+    });
+
+    restartButton.addEventListener('click', initializeGame);
+    difficultySelector.addEventListener('change', initializeGame);
+
+    // Initialize the game on load
+    initializeGame();
+  </script>
+
+</body>
+</html>
+
+
