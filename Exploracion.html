@@ -126,7 +126,8 @@
         }
 
         function procesarConIA(comentario) {
-            return `Texto mejorado: ${comentario}`; // Simulación de mejora con IA
+            if (!comentario) return "Sin comentarios";
+            return `Texto sugerido: ${comentario} (propuesta IA)`;
         }
 
         function mostrarResumen() {
@@ -143,18 +144,24 @@
                 const row = document.createElement("tr");
                 row.innerHTML = `
                     <td class="p-2 border">${region}</td>
-                    <td class="p-2 border"><input type="text" class="w-full bg-gray-700 text-white p-1" value="${comentario}" data-region="${region}"></td>
+                    <td class="p-2 border">${comentario}</td>
                     <td class="p-2 border">${textoMejorado}</td>
+                    <td class="p-2 border">
+                        <select class="w-full bg-gray-700 text-white p-1" data-region="${region}">
+                            <option value="${comentario}" selected>Original</option>
+                            <option value="${textoMejorado}">Propuesta IA</option>
+                        </select>
+                    </td>
                 `;
                 resumenTable.appendChild(row);
             }
         }
 
         function guardarResumen() {
-            const inputs = document.querySelectorAll("#resumen-table input");
-            inputs.forEach(input => {
-                const region = input.dataset.region;
-                results[region] = input.value;
+            const selects = document.querySelectorAll("#resumen-table select");
+            selects.forEach(select => {
+                const region = select.dataset.region;
+                results[region] = select.value;
             });
 
             console.log("Resumen final guardado:", results);
@@ -225,7 +232,8 @@
                     <tr>
                         <th class="p-2 border">Región</th>
                         <th class="p-2 border">Comentario</th>
-                        <th class="p-2 border">Texto Mejorado</th>
+                        <th class="p-2 border">Propuesta IA</th>
+                        <th class="p-2 border">Seleccionar</th>
                     </tr>
                 </thead>
                 <tbody id="resumen-table"></tbody>
