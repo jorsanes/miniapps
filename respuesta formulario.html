@@ -10,20 +10,26 @@
 
         // Llamar al endpoint y mostrar el enlace
         fetch(endpointUrl)
-            .then(response => response.text())
+            .then(response => {
+                if (!response.ok) {
+                    throw new Error(`HTTP error! status: ${response.status}`);
+                }
+                return response.text();
+            })
             .then(enlace => {
+                const linkDiv = document.getElementById("enlace");
                 if (enlace && enlace.startsWith("http")) {
-                    document.getElementById("enlace").innerHTML = `
+                    linkDiv.innerHTML = `
                         <a href="${enlace}" target="_blank" style="color: blue; font-weight: bold;">
                             Ir a la Exploración
                         </a>`;
                 } else {
-                    document.getElementById("enlace").innerText = "No se encontró un enlace válido.";
+                    linkDiv.innerText = "No se encontró un enlace válido.";
                 }
             })
             .catch(error => {
+                console.error("Error al obtener el enlace:", error);
                 document.getElementById("enlace").innerText = "Hubo un error al cargar el enlace.";
-                console.error(error);
             });
     </script>
 </head>
