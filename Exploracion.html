@@ -3,119 +3,54 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Exploración Guiada</title>
+    <title>Exploración Veterinaria</title>
     <script src="https://cdn.tailwindcss.com"></script>
-</head>
-<body class="bg-gray-100 text-gray-800 font-sans">
-    <div class="container mx-auto px-4 py-8">
-        <div class="bg-white shadow-md rounded-lg p-6">
-            <h1 id="region-title" class="text-2xl font-bold text-center text-indigo-600 mb-4">Exploración Guiada</h1>
-            <p id="intro-text" class="text-gray-600 text-center mb-6"></p>
-
-            <!-- Botones de Dictado -->
-            <div class="flex justify-center gap-4 mb-4">
-                <button id="start-btn" class="px-4 py-2 bg-green-500 text-white rounded-md hover:bg-green-600">
-                    Iniciar Dictado
-                </button>
-                <button id="stop-btn" class="px-4 py-2 bg-red-500 text-white rounded-md hover:bg-red-600" disabled>
-                    Detener Dictado
-                </button>
-            </div>
-
-            <!-- Área de Comentarios -->
-            <textarea id="comments" rows="6" class="w-full p-3 border rounded-md focus:outline-none focus:ring-2 focus:ring-indigo-500" placeholder="El texto dictado aparecerá aquí..."></textarea>
-
-            <!-- Botones de Navegación -->
-            <div class="flex justify-between mt-6">
-                <button id="skip-btn" class="px-4 py-2 bg-gray-400 text-white rounded-md hover:bg-gray-500">
-                    Omitir
-                </button>
-                <button id="next-btn" class="px-4 py-2 bg-indigo-500 text-white rounded-md hover:bg-indigo-600">
-                    Siguiente
-                </button>
-            </div>
-        </div>
-    </div>
-
     <script>
-        // Regiones para cada plantilla
-        const regiones = {
-            Abdominal: [
-                "Vejiga Urinaria",
-                "Próstata / Útero y Ovarios",
-                "Riñón Izquierdo",
-                "Bazo",
-                "Estómago",
-                "Hígado y Vesícula Biliar",
-                "Riñón Derecho",
-                "Páncreas",
-                "Glándulas Adrenales",
-                "Asas Intestinales",
-                "Ganglios Linfáticos",
-                "Cavidad Abdominal"
-            ],
-            Cuello: [
-                "Tiroides",
-                "Linfonodos",
-                "Glándulas Salivares"
-            ],
-            Cardiaca: [
-                "Ventana Paraesternal Derecha",
-                "Ventana Paraesternal Izquierda",
-                "Ventana Subcostal Subxifoidea"
-            ]
-        };
+        // Lista de regiones a explorar
+        const regionList = [
+            "Vejiga",
+            "Próstata",
+            "Útero y Ovarios",
+            "Riñón Izquierdo",
+            "Bazo",
+            "Estómago",
+            "Hígado y Vesícula Biliar",
+            "Riñón Derecho",
+            "Páncreas",
+            "Glándulas Adrenales",
+            "Asas Intestinales",
+            "Ganglios Linfáticos",
+            "Cavidad Abdominal"
+        ];
 
+        // Índice actual de la región en el ciclo
         let currentRegionIndex = 0;
-        let regionList = [];
-        const results = {}; // Para guardar los comentarios procesados
 
-        // Leer la plantilla de la URL
-        const urlParams = new URLSearchParams(window.location.search);
-        const plantilla = urlParams.get('plantilla');
+        // Objeto para almacenar resultados
+        const results = {};
 
-        if (plantilla && regiones[plantilla]) {
-            regionList = regiones[plantilla];
-            iniciarExploracion();
-        } else {
-            alert("Plantilla no válida. Regrese al formulario.");
-        }
-
-        function iniciarExploracion() {
-            avanzarRegion();
-            document.getElementById('intro-text').textContent = `Plantilla seleccionada: ${plantilla}`;
-        }
-
+        // Función para avanzar a la siguiente región
         function avanzarRegion() {
-            const regionTitle = document.getElementById('region-title');
-            const comments = document.getElementById('comments');
+            const regionTitle = document.getElementById("region-title");
+            const comments = document.getElementById("comments");
+
             if (currentRegionIndex < regionList.length) {
                 regionTitle.textContent = `Exploración: ${regionList[currentRegionIndex]}`;
-                comments.value = "";
+                comments.value = ""; // Limpia el campo de comentarios
             } else {
                 finalizarExploracion();
             }
         }
 
-        function finalizarExploracion() {
-            console.log("Exploración completa:", results);
-            alert("Exploración completada. Los datos serán procesados.");
-            // Aquí puedes enviar los resultados a la IA o al informe
-            enviarDatosAlInforme();
-        }
-
-        function enviarDatosAlInforme() {
-            fetch("URL_DEL_SCRIPT_DE_GOOGLE", {
-                method: "POST",
-                headers: { "Content-Type": "application/json" },
-                body: JSON.stringify(results)
-            })
-            .then(response => console.log("Informe generado."))
-            .catch(error => console.error("Error al generar el informe:", error));
-        }
-
-        // Función para procesar comentarios por IA
+        // Función para procesar con IA
         function procesarConIA(comentario, region) {
+            if (!comentario) {
+                results[region] = "Sin comentarios"; // Si no hay texto, se marca como sin comentarios
+                currentRegionIndex++;
+                avanzarRegion();
+                return;
+            }
+
             fetch("URL_DE_LA_API_DE_IA", {
                 method: "POST",
                 headers: { "Content-Type": "application/json" },
@@ -123,58 +58,60 @@
             })
             .then(response => response.json())
             .then(data => {
-                results[region] = data.resultado || comentario; // Texto profesional generado
+                results[region] = data.resultado || comentario; // Guardar el texto procesado o el original
                 currentRegionIndex++;
-                avanzarRegion();
+                avanzarRegion(); // Avanzar a la siguiente región
             })
             .catch(error => {
                 console.error("Error con la IA:", error);
-                alert("Hubo un problema procesando el texto.");
+                alert("Hubo un problema procesando el texto."); // Mostrar un error claro
+                results[region] = comentario; // Guardar el texto original para evitar perder datos
+                currentRegionIndex++;
+                avanzarRegion();
             });
         }
 
-        // Eventos de los botones
-        document.getElementById('next-btn').addEventListener('click', () => {
-            const comentario = document.getElementById('comments').value.trim();
-            const region = regionList[currentRegionIndex];
-            procesarConIA(comentario, region);
+        // Evento del botón "Siguiente"
+        document.addEventListener("DOMContentLoaded", () => {
+            document.getElementById("next-btn").addEventListener("click", () => {
+                const comments = document.getElementById("comments").value.trim();
+                const region = regionList[currentRegionIndex];
+
+                procesarConIA(comments, region); // Procesar el texto con IA
+            });
+
+            document.getElementById("skip-btn").addEventListener("click", () => {
+                const region = regionList[currentRegionIndex];
+                results[region] = "Omitido"; // Marca la región como omitida
+
+                currentRegionIndex++; // Avanza al siguiente índice
+                avanzarRegion();
+            });
+
+            avanzarRegion(); // Inicializar la primera región
         });
 
-        document.getElementById('skip-btn').addEventListener('click', () => {
-            const region = regionList[currentRegionIndex];
-            results[region] = "Omitido";
-            currentRegionIndex++;
-            avanzarRegion();
-        });
-
-        // Configuración del dictado
-        let recognition;
-        if ('webkitSpeechRecognition' in window) {
-            recognition = new webkitSpeechRecognition();
-            recognition.lang = 'es-ES';
-            recognition.continuous = true;
-            recognition.interimResults = false;
-
-            recognition.onstart = () => {
-                document.getElementById('start-btn').disabled = true;
-                document.getElementById('stop-btn').disabled = false;
-            };
-
-            recognition.onresult = (event) => {
-                const transcript = event.results[event.results.length - 1][0].transcript;
-                document.getElementById('comments').value += transcript + '\n';
-            };
-
-            recognition.onerror = (event) => console.error("Error de reconocimiento:", event.error);
-
-            recognition.onend = () => {
-                document.getElementById('start-btn').disabled = false;
-                document.getElementById('stop-btn').disabled = true;
-            };
+        // Función para finalizar la exploración
+        function finalizarExploracion() {
+            alert("Exploración completada. Ahora puedes guardar los resultados.");
+            console.log(results); // Aquí puedes integrar el envío de datos al backend o procesar los resultados
         }
-
-        document.getElementById('start-btn').addEventListener('click', () => recognition.start());
-        document.getElementById('stop-btn').addEventListener('click', () => recognition.stop());
     </script>
+</head>
+<body class="bg-gray-100 text-gray-800 font-sans">
+    <div class="container mx-auto px-4 py-12">
+        <div class="bg-white shadow-md rounded-lg p-6 max-w-lg mx-auto text-center">
+            <h1 id="region-title" class="text-2xl font-bold text-indigo-600 mb-4">Exploración</h1>
+            <textarea id="comments" class="w-full border-gray-300 rounded-lg p-3 mb-4" rows="4" placeholder="Escribe tus observaciones aquí..."></textarea>
+            <div class="flex justify-between">
+                <button id="skip-btn" class="bg-gray-400 hover:bg-gray-500 text-white font-bold py-2 px-4 rounded">
+                    Omitir
+                </button>
+                <button id="next-btn" class="bg-indigo-600 hover:bg-indigo-700 text-white font-bold py-2 px-4 rounded">
+                    Siguiente
+                </button>
+            </div>
+        </div>
+    </div>
 </body>
 </html>
