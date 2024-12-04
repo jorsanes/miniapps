@@ -8,7 +8,7 @@
         // URL del endpoint para obtener el enlace más reciente
         const endpointUrl = "https://script.google.com/macros/s/AKfycbx_h-xOQwOq9C8tVONkOqeivm5SOj8RwKsvFhiGckhS_dsqm9wBirSmPiQyQt54xs2p/exec";
 
-        // Llamar al endpoint y mostrar el enlace
+        // Llamar al endpoint y redirigir al enlace
         fetch(endpointUrl)
             .then(response => {
                 if (!response.ok) {
@@ -17,25 +17,19 @@
                 return response.text();
             })
             .then(enlace => {
-                const linkDiv = document.getElementById("enlace");
                 if (enlace && enlace.startsWith("http")) {
-                    linkDiv.innerHTML = `
-                        <a href="${enlace}" target="_blank" style="color: blue; font-weight: bold;">
-                            Ir a la Exploración
-                        </a>`;
+                    window.location.href = enlace; // Redirige automáticamente al enlace
                 } else {
-                    linkDiv.innerText = "No se encontró un enlace válido.";
+                    document.getElementById("mensaje").innerText = "No se encontró un enlace válido.";
                 }
             })
             .catch(error => {
                 console.error("Error al obtener el enlace:", error);
-                document.getElementById("enlace").innerText = "Hubo un error al cargar el enlace.";
+                document.getElementById("mensaje").innerText = "Hubo un error al cargar el enlace. Intenta nuevamente.";
             });
     </script>
 </head>
 <body style="text-align: center; margin-top: 20px;">
-    <h1>Gracias por completar el formulario</h1>
-    <p>Haz clic en el siguiente enlace para continuar:</p>
-    <div id="enlace" style="margin-top: 20px; font-size: 20px; color: gray;">Cargando enlace...</div>
+    <h1 id="mensaje">Redirigiendo...</h1>
 </body>
 </html>
