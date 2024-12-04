@@ -194,6 +194,25 @@
 
             avanzarRegion();
         });
+
+        function avanzarRegion() {
+            const regionTitle = document.getElementById("region-title");
+            const comments = document.getElementById("comments");
+
+            if (currentRegionIndex < regionList.length) {
+                regionTitle.textContent = `Exploración: ${regionList[currentRegionIndex]}`;
+                comments.value = results[regionList[currentRegionIndex]] || "";
+            } else {
+                mostrarResumen(); // Muestra el resumen cuando se completan todas las regiones
+            }
+        }
+
+        function retrocederRegion() {
+            if (currentRegionIndex > 0) {
+                currentRegionIndex--;
+                avanzarRegion();
+            }
+        }
     </script>
 </head>
 <body class="bg-gray-900 text-gray-100 font-sans">
