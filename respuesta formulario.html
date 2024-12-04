@@ -1,0 +1,35 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Redirección</title>
+    <script>
+        // URL del endpoint para obtener el enlace más reciente
+        const endpointUrl = "URL_DE_TU_ENDPOINT";
+
+        // Llamar al endpoint y mostrar el enlace
+        fetch(endpointUrl)
+            .then(response => response.text())
+            .then(enlace => {
+                if (enlace && enlace.startsWith("http")) {
+                    document.getElementById("enlace").innerHTML = `
+                        <a href="${enlace}" target="_blank" style="color: blue; font-weight: bold;">
+                            Ir a la Exploración
+                        </a>`;
+                } else {
+                    document.getElementById("enlace").innerText = "No se encontró un enlace válido.";
+                }
+            })
+            .catch(error => {
+                document.getElementById("enlace").innerText = "Hubo un error al cargar el enlace.";
+                console.error(error);
+            });
+    </script>
+</head>
+<body style="text-align: center; margin-top: 20px;">
+    <h1>Gracias por completar el formulario</h1>
+    <p>Haz clic en el siguiente enlace para continuar:</p>
+    <div id="enlace" style="margin-top: 20px; font-size: 20px; color: gray;">Cargando enlace...</div>
+</body>
+</html>
