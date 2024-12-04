@@ -5,6 +5,18 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Exploración Veterinaria</title>
     <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        #dictation-status {
+            font-size: 0.875rem;
+            font-weight: bold;
+        }
+        #dictation-status.active {
+            color: #10b981; /* Verde */
+        }
+        #dictation-status.inactive {
+            color: #ef4444; /* Rojo */
+        }
+    </style>
     <script>
         const regionList = [
             "Vejiga",
@@ -26,6 +38,59 @@
         const results = {};
         let recognition;
 
+        // Función para actualizar el estado del dictado
+        function actualizarEstadoDictado(estado) {
+            const statusElement = document.getElementById("dictation-status");
+            if (estado === "active") {
+                statusElement.textContent = "Dictado Activado";
+                statusElement.className = "active";
+            } else {
+                statusElement.textContent = "Dictado Desactivado";
+                statusElement.className = "inactive";
+            }
+        }
+
+        // Inicializa el reconocimiento de voz
+        function iniciarDictado() {
+            if (!('webkitSpeechRecognition' in window)) {
+                alert("Tu navegador no soporta reconocimiento de voz.");
+                return;
+            }
+
+            if (!recognition) {
+                recognition = new webkitSpeechRecognition();
+                recognition.lang = "es-ES";
+                recognition.continuous = false; // El dictado se detiene automáticamente después de un intervalo
+                recognition.interimResults = false;
+                recognition.maxAlternatives = 1; // Limita el número de resultados alternativos
+
+                recognition.onstart = () => actualizarEstadoDictado("active");
+                recognition.onend = () => actualizarEstadoDictado("inactive");
+
+                recognition.onresult = (event) => {
+                    const comments = document.getElementById("comments");
+                    comments.value += (comments.value ? " " : "") + event.results[0][0].transcript;
+                };
+
+                recognition.onerror = (event) => {
+                    alert("Hubo un error con el dictado. Por favor, intenta de nuevo.");
+                };
+            }
+
+            recognition.start();
+            setTimeout(() => {
+                detenerDictado(); // Detiene el dictado automáticamente después de 60 segundos
+            }, 60000); // 60 segundos
+        }
+
+        // Detener el reconocimiento de voz
+        function detenerDictado() {
+            if (recognition) {
+                recognition.stop();
+                actualizarEstadoDictado("inactive");
+            }
+        }
+
         // Función para avanzar a la siguiente región
         function avanzarRegion() {
             const regionTitle = document.getElementById("region-title");
@@ -33,7 +98,7 @@
 
             if (currentRegionIndex < regionList.length) {
                 regionTitle.textContent = `Exploración: ${regionList[currentRegionIndex]}`;
-                comments.value = results[regionList[currentRegionIndex]] || ""; // Cargar comentarios previos si existen
+                comments.value = results[regionList[currentRegionIndex]] || "";
             } else {
                 finalizarExploracion();
             }
@@ -58,46 +123,12 @@
                 return;
             }
 
-            // Simulación de procesamiento con IA
             setTimeout(() => {
                 const textoProcesado = `Resultado procesado (IA): ${comentario}`;
-                results[region] = textoProcesado; // Simula el resultado procesado
+                results[region] = textoProcesado;
                 currentRegionIndex++;
                 avanzarRegion();
             }, 1000); // Simula un retraso de 1 segundo
-        }
-
-        // Inicializa el reconocimiento de voz
-        function iniciarDictado() {
-            if (!('webkitSpeechRecognition' in window)) {
-                alert("Tu navegador no soporta reconocimiento de voz.");
-                return;
-            }
-
-            if (!recognition) {
-                recognition = new webkitSpeechRecognition();
-                recognition.lang = "es-ES";
-                recognition.continuous = false;
-                recognition.interimResults = false;
-
-                recognition.onresult = (event) => {
-                    const comments = document.getElementById("comments");
-                    comments.value += (comments.value ? " " : "") + event.results[0][0].transcript; // Añadir en lugar de reemplazar
-                };
-
-                recognition.onerror = (event) => {
-                    alert("Hubo un error con el dictado. Por favor, intenta de nuevo.");
-                };
-            }
-
-            recognition.start();
-        }
-
-        // Detener el reconocimiento de voz
-        function detenerDictado() {
-            if (recognition) {
-                recognition.stop();
-            }
         }
 
         // Inicializa los eventos
@@ -116,17 +147,15 @@
             });
 
             document.getElementById("back-btn").addEventListener("click", retrocederRegion);
-
             document.getElementById("start-dictation").addEventListener("click", iniciarDictado);
             document.getElementById("stop-dictation").addEventListener("click", detenerDictado);
 
-            avanzarRegion(); // Inicializa la primera región
+            avanzarRegion();
         });
 
-        // Función para finalizar la exploración
         function finalizarExploracion() {
             alert("Exploración completada. Los resultados han sido registrados.");
-            console.log(results); // Aquí se pueden usar los datos para integrarlos en el Word
+            console.log(results); // Aquí puedes usar los datos para integrarlos en el Word
         }
     </script>
 </head>
@@ -135,6 +164,9 @@
         <div class="bg-gray-800 shadow-md rounded-lg p-6 max-w-lg mx-auto text-center">
             <h1 id="region-title" class="text-2xl font-bold text-teal-400 mb-4">Exploración</h1>
             <textarea id="comments" class="w-full border-gray-600 bg-gray-700 text-gray-100 rounded-lg p-3 mb-4" rows="4" placeholder="Escribe tus observaciones aquí..."></textarea>
+            <div class="mb-2">
+                <p id="dictation-status" class="inactive">Dictado Desactivado</p>
+            </div>
             <div class="flex justify-between mb-4">
                 <button id="start-dictation" class="bg-green-500 hover:bg-green-600 text-white font-bold py-2 px-4 rounded">
                     Iniciar Dictado
