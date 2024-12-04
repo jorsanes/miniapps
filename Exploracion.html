@@ -33,9 +33,19 @@
 
             if (currentRegionIndex < regionList.length) {
                 regionTitle.textContent = `Exploración: ${regionList[currentRegionIndex]}`;
-                comments.value = ""; // Limpia el campo de comentarios
+                comments.value = results[regionList[currentRegionIndex]] || ""; // Cargar comentarios previos si existen
             } else {
                 finalizarExploracion();
+            }
+        }
+
+        // Función para retroceder a la región anterior
+        function retrocederRegion() {
+            if (currentRegionIndex > 0) {
+                currentRegionIndex--;
+                avanzarRegion();
+            } else {
+                alert("Ya estás en la primera región.");
             }
         }
 
@@ -51,7 +61,7 @@
             // Simulación de procesamiento con IA
             setTimeout(() => {
                 const textoProcesado = `Resultado procesado (IA): ${comentario}`;
-                results[region] = textoProcesado;
+                results[region] = textoProcesado; // Simula el resultado procesado
                 currentRegionIndex++;
                 avanzarRegion();
             }, 1000); // Simula un retraso de 1 segundo
@@ -72,7 +82,7 @@
 
                 recognition.onresult = (event) => {
                     const comments = document.getElementById("comments");
-                    comments.value = event.results[0][0].transcript;
+                    comments.value += (comments.value ? " " : "") + event.results[0][0].transcript; // Añadir en lugar de reemplazar
                 };
 
                 recognition.onerror = (event) => {
@@ -105,6 +115,8 @@
                 avanzarRegion();
             });
 
+            document.getElementById("back-btn").addEventListener("click", retrocederRegion);
+
             document.getElementById("start-dictation").addEventListener("click", iniciarDictado);
             document.getElementById("stop-dictation").addEventListener("click", detenerDictado);
 
@@ -114,7 +126,7 @@
         // Función para finalizar la exploración
         function finalizarExploracion() {
             alert("Exploración completada. Los resultados han sido registrados.");
-            console.log(results); // Muestra los resultados en la consola
+            console.log(results); // Aquí se pueden usar los datos para integrarlos en el Word
         }
     </script>
 </head>
@@ -132,6 +144,9 @@
                 </button>
             </div>
             <div class="flex justify-between">
+                <button id="back-btn" class="bg-gray-500 hover:bg-gray-600 text-white font-bold py-2 px-4 rounded">
+                    Atrás
+                </button>
                 <button id="skip-btn" class="bg-gray-500 hover:bg-gray-600 text-white font-bold py-2 px-4 rounded">
                     Omitir
                 </button>
