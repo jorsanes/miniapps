@@ -18,13 +18,14 @@
         }
     </style>
     <script>
-        let regionList = []; // Lista dinámica de regiones
+        let regionList = [];
         let currentRegionIndex = 0;
         const results = {};
         let recognition;
-        let dictadoActivo = false;
+        let isListening = false; // Indica si el dictado está activo
+        let lastSpeechEnd = null;
 
-        // Función para actualizar el estado del dictado
+        // Actualiza el estado del dictado
         function actualizarEstadoDictado(estado) {
             const statusElement = document.getElementById("dictation-status");
             if (estado === "active") {
@@ -46,11 +47,11 @@
             if (!recognition) {
                 recognition = new webkitSpeechRecognition();
                 recognition.lang = "es-ES";
-                recognition.continuous = true; // Cambia a modo continuo
+                recognition.continuous = false; // No continuo
                 recognition.interimResults = false;
 
                 recognition.onstart = () => {
-                    dictadoActivo = true;
+                    isListening = true;
                     actualizarEstadoDictado("active");
                 };
 
@@ -61,35 +62,37 @@
 
                 recognition.onerror = (event) => {
                     console.error("Error en el dictado:", event);
-                    alert("Hubo un error con el dictado. Por favor, intenta de nuevo.");
+                    alert("Hubo un problema con el dictado. Por favor, intenta de nuevo.");
                 };
 
                 recognition.onend = () => {
-                    if (dictadoActivo) {
-                        recognition.start(); // Reinicia automáticamente si está activo
+                    isListening = false;
+                    const now = new Date().getTime();
+                    if (!lastSpeechEnd || now - lastSpeechEnd < 6000) {
+                        iniciarDictado(); // Reinicia si la pausa es menor a 6 segundos
                     } else {
                         actualizarEstadoDictado("inactive");
                     }
+                    lastSpeechEnd = now;
                 };
             }
 
             recognition.start();
         }
 
+        // Detiene el dictado manualmente
         function detenerDictado() {
             if (recognition) {
-                dictadoActivo = false;
+                isListening = false;
                 recognition.stop();
                 actualizarEstadoDictado("inactive");
             }
         }
 
-        // Configurar las regiones según la plantilla
+        // Configura las regiones según la plantilla seleccionada
         function configurarPlantilla() {
             const params = new URLSearchParams(window.location.search);
             const plantilla = params.get("plantilla");
-
-            console.log("Plantilla seleccionada:", plantilla);
 
             if (plantilla === "Abdominal") {
                 regionList = [
@@ -111,7 +114,7 @@
             }
         }
 
-        // Función para avanzar a la siguiente región
+        // Avanza a la siguiente región
         function avanzarRegion() {
             const regionTitle = document.getElementById("region-title");
             const comments = document.getElementById("comments");
@@ -155,6 +158,7 @@
                 alert("No se pudo cargar ninguna plantilla. Por favor, revisa la URL.");
                 return;
             }
+
             document.getElementById("next-btn").addEventListener("click", () => {
                 const comments = document.getElementById("comments").value.trim();
                 const region = regionList[currentRegionIndex];
