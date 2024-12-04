@@ -16,16 +16,15 @@
         #dictation-status.inactive {
             color: #ef4444; /* Rojo */
         }
+        .hidden { display: none; }
     </style>
     <script>
         let regionList = [];
         let currentRegionIndex = 0;
         const results = {};
         let recognition;
-        let isListening = false; // Indica si el dictado está activo
-        let lastSpeechEnd = null;
+        let isListening = false;
 
-        // Actualiza el estado del dictado
         function actualizarEstadoDictado(estado) {
             const statusElement = document.getElementById("dictation-status");
             if (estado === "active") {
@@ -37,7 +36,6 @@
             }
         }
 
-        // Inicializa el reconocimiento de voz
         function iniciarDictado() {
             if (!('webkitSpeechRecognition' in window)) {
                 alert("Tu navegador no soporta reconocimiento de voz.");
@@ -47,7 +45,7 @@
             if (!recognition) {
                 recognition = new webkitSpeechRecognition();
                 recognition.lang = "es-ES";
-                recognition.continuous = false; // No continuo
+                recognition.continuous = false;
                 recognition.interimResults = false;
 
                 recognition.onstart = () => {
@@ -67,20 +65,13 @@
 
                 recognition.onend = () => {
                     isListening = false;
-                    const now = new Date().getTime();
-                    if (!lastSpeechEnd || now - lastSpeechEnd < 6000) {
-                        iniciarDictado(); // Reinicia si la pausa es menor a 6 segundos
-                    } else {
-                        actualizarEstadoDictado("inactive");
-                    }
-                    lastSpeechEnd = now;
+                    actualizarEstadoDictado("inactive");
                 };
             }
 
             recognition.start();
         }
 
-        // Detiene el dictado manualmente
         function detenerDictado() {
             if (recognition) {
                 isListening = false;
@@ -89,7 +80,6 @@
             }
         }
 
-        // Configura las regiones según la plantilla seleccionada
         function configurarPlantilla() {
             const params = new URLSearchParams(window.location.search);
             const plantilla = params.get("plantilla");
@@ -114,7 +104,6 @@
             }
         }
 
-        // Avanza a la siguiente región
         function avanzarRegion() {
             const regionTitle = document.getElementById("region-title");
             const comments = document.getElementById("comments");
@@ -123,7 +112,7 @@
                 regionTitle.textContent = `Exploración: ${regionList[currentRegionIndex]}`;
                 comments.value = results[regionList[currentRegionIndex]] || "";
             } else {
-                finalizarExploracion();
+                mostrarResumen();
             }
         }
 
@@ -136,33 +125,51 @@
             }
         }
 
-        function procesarConIA(comentario, region) {
-            if (!comentario) {
-                results[region] = "Sin comentarios";
-                currentRegionIndex++;
-                avanzarRegion();
-                return;
-            }
+        function procesarConIA(comentario) {
+            return `Texto mejorado: ${comentario}`; // Simulación de mejora con IA
+        }
 
-            setTimeout(() => {
-                const textoProcesado = `Resultado procesado (IA): ${comentario}`;
-                results[region] = textoProcesado;
-                currentRegionIndex++;
-                avanzarRegion();
-            }, 1000);
+        function mostrarResumen() {
+            document.getElementById("exploracion").classList.add("hidden");
+            document.getElementById("resumen").classList.remove("hidden");
+
+            const resumenTable = document.getElementById("resumen-table");
+            resumenTable.innerHTML = ""; // Limpia la tabla previa
+
+            for (const region of regionList) {
+                const comentario = results[region] || "Sin comentarios";
+                const textoMejorado = procesarConIA(comentario);
+
+                const row = document.createElement("tr");
+                row.innerHTML = `
+                    <td class="p-2 border">${region}</td>
+                    <td class="p-2 border"><input type="text" class="w-full bg-gray-700 text-white p-1" value="${comentario}" data-region="${region}"></td>
+                    <td class="p-2 border">${textoMejorado}</td>
+                `;
+                resumenTable.appendChild(row);
+            }
+        }
+
+        function guardarResumen() {
+            const inputs = document.querySelectorAll("#resumen-table input");
+            inputs.forEach(input => {
+                const region = input.dataset.region;
+                results[region] = input.value;
+            });
+
+            console.log("Resumen final guardado:", results);
+            alert("Resumen guardado correctamente.");
         }
 
         document.addEventListener("DOMContentLoaded", () => {
             configurarPlantilla();
-            if (regionList.length === 0) {
-                alert("No se pudo cargar ninguna plantilla. Por favor, revisa la URL.");
-                return;
-            }
 
             document.getElementById("next-btn").addEventListener("click", () => {
                 const comments = document.getElementById("comments").value.trim();
                 const region = regionList[currentRegionIndex];
-                procesarConIA(comments, region);
+                results[region] = comments;
+                currentRegionIndex++;
+                avanzarRegion();
             });
 
             document.getElementById("skip-btn").addEventListener("click", () => {
@@ -175,18 +182,14 @@
             document.getElementById("back-btn").addEventListener("click", retrocederRegion);
             document.getElementById("start-dictation").addEventListener("click", iniciarDictado);
             document.getElementById("stop-dictation").addEventListener("click", detenerDictado);
+            document.getElementById("save-summary-btn").addEventListener("click", guardarResumen);
 
             avanzarRegion();
         });
-
-        function finalizarExploracion() {
-            alert("Exploración completada. Los resultados han sido registrados.");
-            console.log(results);
-        }
     </script>
 </head>
 <body class="bg-gray-900 text-gray-100 font-sans">
-    <div class="container mx-auto px-4 py-12">
+    <div id="exploracion" class="container mx-auto px-4 py-12">
         <div class="bg-gray-800 shadow-md rounded-lg p-6 max-w-lg mx-auto text-center">
             <h1 id="region-title" class="text-2xl font-bold text-teal-400 mb-4">Exploración</h1>
             <textarea id="comments" class="w-full border-gray-600 bg-gray-700 text-gray-100 rounded-lg p-3 mb-4" rows="4" placeholder="Escribe tus observaciones aquí..."></textarea>
@@ -212,6 +215,24 @@
                     Siguiente
                 </button>
             </div>
+        </div>
+    </div>
+    <div id="resumen" class="hidden container mx-auto px-4 py-12">
+        <div class="bg-gray-800 shadow-md rounded-lg p-6 max-w-4xl mx-auto">
+            <h1 class="text-2xl font-bold text-teal-400 mb-4">Resumen de la Exploración</h1>
+            <table class="w-full border-collapse border border-gray-600 mb-4 text-gray-100">
+                <thead>
+                    <tr>
+                        <th class="p-2 border">Región</th>
+                        <th class="p-2 border">Comentario</th>
+                        <th class="p-2 border">Texto Mejorado</th>
+                    </tr>
+                </thead>
+                <tbody id="resumen-table"></tbody>
+            </table>
+            <button id="save-summary-btn" class="bg-teal-500 hover:bg-teal-600 text-white font-bold py-2 px-4 rounded">
+                Guardar Resumen
+            </button>
         </div>
     </div>
 </body>
