@@ -23,11 +23,8 @@
             "Cavidad Abdominal"
         ];
 
-        // Índice actual de la región en el ciclo
-        let currentRegionIndex = 0;
-
-        // Objeto para almacenar resultados
-        const results = {};
+        let currentRegionIndex = 0; // Índice de región actual
+        const results = {}; // Resultados
 
         // Función para avanzar a la siguiente región
         function avanzarRegion() {
@@ -42,49 +39,36 @@
             }
         }
 
-        // Función para procesar con IA
+        // Simulación de procesamiento con IA
         function procesarConIA(comentario, region) {
             if (!comentario) {
-                results[region] = "Sin comentarios"; // Si no hay texto, se marca como sin comentarios
+                results[region] = "Sin comentarios";
                 currentRegionIndex++;
                 avanzarRegion();
                 return;
             }
 
-            fetch("URL_DE_LA_API_DE_IA", {
-                method: "POST",
-                headers: { "Content-Type": "application/json" },
-                body: JSON.stringify({ comentario })
-            })
-            .then(response => response.json())
-            .then(data => {
-                results[region] = data.resultado || comentario; // Guardar el texto procesado o el original
-                currentRegionIndex++;
-                avanzarRegion(); // Avanzar a la siguiente región
-            })
-            .catch(error => {
-                console.error("Error con la IA:", error);
-                alert("Hubo un problema procesando el texto."); // Mostrar un error claro
-                results[region] = comentario; // Guardar el texto original para evitar perder datos
+            // Simulación de un procesamiento con IA
+            setTimeout(() => {
+                const textoProcesado = `Resultado procesado (IA): ${comentario}`;
+                results[region] = textoProcesado;
                 currentRegionIndex++;
                 avanzarRegion();
-            });
+            }, 1000); // Simula un retraso de 1 segundo
         }
 
-        // Evento del botón "Siguiente"
+        // Inicializa los eventos al cargar la página
         document.addEventListener("DOMContentLoaded", () => {
             document.getElementById("next-btn").addEventListener("click", () => {
                 const comments = document.getElementById("comments").value.trim();
                 const region = regionList[currentRegionIndex];
-
                 procesarConIA(comments, region); // Procesar el texto con IA
             });
 
             document.getElementById("skip-btn").addEventListener("click", () => {
                 const region = regionList[currentRegionIndex];
-                results[region] = "Omitido"; // Marca la región como omitida
-
-                currentRegionIndex++; // Avanza al siguiente índice
+                results[region] = "Omitido";
+                currentRegionIndex++;
                 avanzarRegion();
             });
 
@@ -93,21 +77,21 @@
 
         // Función para finalizar la exploración
         function finalizarExploracion() {
-            alert("Exploración completada. Ahora puedes guardar los resultados.");
-            console.log(results); // Aquí puedes integrar el envío de datos al backend o procesar los resultados
+            alert("Exploración completada. Los resultados han sido registrados.");
+            console.log(results); // Muestra los resultados en la consola
         }
     </script>
 </head>
-<body class="bg-gray-100 text-gray-800 font-sans">
+<body class="bg-gray-900 text-gray-100 font-sans">
     <div class="container mx-auto px-4 py-12">
-        <div class="bg-white shadow-md rounded-lg p-6 max-w-lg mx-auto text-center">
-            <h1 id="region-title" class="text-2xl font-bold text-indigo-600 mb-4">Exploración</h1>
-            <textarea id="comments" class="w-full border-gray-300 rounded-lg p-3 mb-4" rows="4" placeholder="Escribe tus observaciones aquí..."></textarea>
+        <div class="bg-gray-800 shadow-md rounded-lg p-6 max-w-lg mx-auto text-center">
+            <h1 id="region-title" class="text-2xl font-bold text-teal-400 mb-4">Exploración</h1>
+            <textarea id="comments" class="w-full border-gray-600 bg-gray-700 text-gray-100 rounded-lg p-3 mb-4" rows="4" placeholder="Escribe tus observaciones aquí..."></textarea>
             <div class="flex justify-between">
-                <button id="skip-btn" class="bg-gray-400 hover:bg-gray-500 text-white font-bold py-2 px-4 rounded">
+                <button id="skip-btn" class="bg-gray-500 hover:bg-gray-600 text-white font-bold py-2 px-4 rounded">
                     Omitir
                 </button>
-                <button id="next-btn" class="bg-indigo-600 hover:bg-indigo-700 text-white font-bold py-2 px-4 rounded">
+                <button id="next-btn" class="bg-teal-500 hover:bg-teal-600 text-white font-bold py-2 px-4 rounded">
                     Siguiente
                 </button>
             </div>
