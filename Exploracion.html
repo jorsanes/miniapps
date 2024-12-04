@@ -18,25 +18,11 @@
         }
     </style>
     <script>
-        const regionList = [
-            "Vejiga",
-            "Próstata",
-            "Útero y Ovarios",
-            "Riñón Izquierdo",
-            "Bazo",
-            "Estómago",
-            "Hígado y Vesícula Biliar",
-            "Riñón Derecho",
-            "Páncreas",
-            "Glándulas Adrenales",
-            "Asas Intestinales",
-            "Ganglios Linfáticos",
-            "Cavidad Abdominal"
-        ];
-
+        let regionList = []; // Lista dinámica de regiones
         let currentRegionIndex = 0;
         const results = {};
         let recognition;
+        let lastSpeechEnd = null;
 
         // Función para actualizar el estado del dictado
         function actualizarEstadoDictado(estado) {
@@ -60,34 +46,61 @@
             if (!recognition) {
                 recognition = new webkitSpeechRecognition();
                 recognition.lang = "es-ES";
-                recognition.continuous = false; // El dictado se detiene automáticamente después de un intervalo
+                recognition.continuous = false; 
                 recognition.interimResults = false;
-                recognition.maxAlternatives = 1; // Limita el número de resultados alternativos
 
                 recognition.onstart = () => actualizarEstadoDictado("active");
-                recognition.onend = () => actualizarEstadoDictado("inactive");
 
                 recognition.onresult = (event) => {
                     const comments = document.getElementById("comments");
                     comments.value += (comments.value ? " " : "") + event.results[0][0].transcript;
                 };
 
-                recognition.onerror = (event) => {
-                    alert("Hubo un error con el dictado. Por favor, intenta de nuevo.");
+                recognition.onerror = () => alert("Error en el dictado.");
+
+                recognition.onend = () => {
+                    const now = new Date().getTime();
+                    if (!lastSpeechEnd || now - lastSpeechEnd > 6000) {
+                        actualizarEstadoDictado("inactive");
+                    } else {
+                        iniciarDictado();
+                    }
+                    lastSpeechEnd = now;
                 };
             }
 
             recognition.start();
-            setTimeout(() => {
-                detenerDictado(); // Detiene el dictado automáticamente después de 60 segundos
-            }, 60000); // 60 segundos
+            setTimeout(() => detenerDictado(), 60000); // Limita el dictado a 60 segundos
         }
 
-        // Detener el reconocimiento de voz
         function detenerDictado() {
             if (recognition) {
                 recognition.stop();
                 actualizarEstadoDictado("inactive");
+            }
+        }
+
+        // Configurar las regiones según la plantilla
+        function configurarPlantilla() {
+            const params = new URLSearchParams(window.location.search);
+            const plantilla = params.get("plantilla");
+
+            if (plantilla === "Abdominal") {
+                regionList = [
+                    "Vejiga", "Próstata", "Útero y Ovarios", "Riñón Izquierdo", "Bazo",
+                    "Estómago", "Hígado y Vesícula Biliar", "Riñón Derecho", "Páncreas",
+                    "Glándulas Adrenales", "Asas Intestinales", "Ganglios Linfáticos", "Cavidad Abdominal"
+                ];
+            } else if (plantilla === "Cuello") {
+                regionList = ["Tiroides", "Linfonodos", "Glándulas Salivares"];
+            } else if (plantilla === "Cardiaca") {
+                regionList = [
+                    "Ventana Paraesternal Derecha", "Ventana Paraesternal Izquierda",
+                    "Ventana Subcostal Subxifoidea", "Valoración de Flujos",
+                    "Valoración de Turbulencias", "Mediciones Modo M"
+                ];
+            } else {
+                alert("Plantilla no válida. Revisa el enlace.");
             }
         }
 
@@ -104,7 +117,6 @@
             }
         }
 
-        // Función para retroceder a la región anterior
         function retrocederRegion() {
             if (currentRegionIndex > 0) {
                 currentRegionIndex--;
@@ -114,7 +126,6 @@
             }
         }
 
-        // Simulación de procesamiento con IA
         function procesarConIA(comentario, region) {
             if (!comentario) {
                 results[region] = "Sin comentarios";
@@ -131,8 +142,8 @@
             }, 1000); // Simula un retraso de 1 segundo
         }
 
-        // Inicializa los eventos
         document.addEventListener("DOMContentLoaded", () => {
+            configurarPlantilla();
             document.getElementById("next-btn").addEventListener("click", () => {
                 const comments = document.getElementById("comments").value.trim();
                 const region = regionList[currentRegionIndex];
@@ -155,7 +166,7 @@
 
         function finalizarExploracion() {
             alert("Exploración completada. Los resultados han sido registrados.");
-            console.log(results); // Aquí puedes usar los datos para integrarlos en el Word
+            console.log(results);
         }
     </script>
 </head>
