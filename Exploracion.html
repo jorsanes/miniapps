@@ -82,8 +82,10 @@
 
         // Configurar las regiones según la plantilla
         function configurarPlantilla() {
-            const params = new URLSearchParams(window.location.search);
-            const plantilla = params.get("plantilla");
+            const params = new URLSearchParams(window.location.search); // Obtener los parámetros de la URL
+            const plantilla = params.get("plantilla"); // Extraer el valor de "plantilla"
+
+            console.log("Plantilla seleccionada:", plantilla); // Registro para depuración
 
             if (plantilla === "Abdominal") {
                 regionList = [
@@ -101,6 +103,7 @@
                 ];
             } else {
                 alert("Plantilla no válida. Revisa el enlace.");
+                regionList = []; // Dejar vacío si no es válido
             }
         }
 
@@ -143,7 +146,11 @@
         }
 
         document.addEventListener("DOMContentLoaded", () => {
-            configurarPlantilla();
+            configurarPlantilla(); // Configura las regiones basadas en la plantilla seleccionada
+            if (regionList.length === 0) {
+                alert("No se pudo cargar ninguna plantilla. Por favor, revisa la URL.");
+                return;
+            }
             document.getElementById("next-btn").addEventListener("click", () => {
                 const comments = document.getElementById("comments").value.trim();
                 const region = regionList[currentRegionIndex];
@@ -161,7 +168,7 @@
             document.getElementById("start-dictation").addEventListener("click", iniciarDictado);
             document.getElementById("stop-dictation").addEventListener("click", detenerDictado);
 
-            avanzarRegion();
+            avanzarRegion(); // Inicializa la primera región
         });
 
         function finalizarExploracion() {
