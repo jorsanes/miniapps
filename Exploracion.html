@@ -22,7 +22,7 @@
         let currentRegionIndex = 0;
         const results = {};
         let recognition;
-        let lastSpeechEnd = null;
+        let dictadoActivo = false;
 
         // Función para actualizar el estado del dictado
         function actualizarEstadoDictado(estado) {
@@ -46,35 +46,39 @@
             if (!recognition) {
                 recognition = new webkitSpeechRecognition();
                 recognition.lang = "es-ES";
-                recognition.continuous = false; 
+                recognition.continuous = true; // Cambia a modo continuo
                 recognition.interimResults = false;
 
-                recognition.onstart = () => actualizarEstadoDictado("active");
+                recognition.onstart = () => {
+                    dictadoActivo = true;
+                    actualizarEstadoDictado("active");
+                };
 
                 recognition.onresult = (event) => {
                     const comments = document.getElementById("comments");
                     comments.value += (comments.value ? " " : "") + event.results[0][0].transcript;
                 };
 
-                recognition.onerror = () => alert("Error en el dictado.");
+                recognition.onerror = (event) => {
+                    console.error("Error en el dictado:", event);
+                    alert("Hubo un error con el dictado. Por favor, intenta de nuevo.");
+                };
 
                 recognition.onend = () => {
-                    const now = new Date().getTime();
-                    if (!lastSpeechEnd || now - lastSpeechEnd > 6000) {
-                        actualizarEstadoDictado("inactive");
+                    if (dictadoActivo) {
+                        recognition.start(); // Reinicia automáticamente si está activo
                     } else {
-                        iniciarDictado();
+                        actualizarEstadoDictado("inactive");
                     }
-                    lastSpeechEnd = now;
                 };
             }
 
             recognition.start();
-            setTimeout(() => detenerDictado(), 60000); // Limita el dictado a 60 segundos
         }
 
         function detenerDictado() {
             if (recognition) {
+                dictadoActivo = false;
                 recognition.stop();
                 actualizarEstadoDictado("inactive");
             }
@@ -82,10 +86,10 @@
 
         // Configurar las regiones según la plantilla
         function configurarPlantilla() {
-            const params = new URLSearchParams(window.location.search); // Obtener los parámetros de la URL
-            const plantilla = params.get("plantilla"); // Extraer el valor de "plantilla"
+            const params = new URLSearchParams(window.location.search);
+            const plantilla = params.get("plantilla");
 
-            console.log("Plantilla seleccionada:", plantilla); // Registro para depuración
+            console.log("Plantilla seleccionada:", plantilla);
 
             if (plantilla === "Abdominal") {
                 regionList = [
@@ -103,7 +107,7 @@
                 ];
             } else {
                 alert("Plantilla no válida. Revisa el enlace.");
-                regionList = []; // Dejar vacío si no es válido
+                regionList = [];
             }
         }
 
@@ -142,11 +146,11 @@
                 results[region] = textoProcesado;
                 currentRegionIndex++;
                 avanzarRegion();
-            }, 1000); // Simula un retraso de 1 segundo
+            }, 1000);
         }
 
         document.addEventListener("DOMContentLoaded", () => {
-            configurarPlantilla(); // Configura las regiones basadas en la plantilla seleccionada
+            configurarPlantilla();
             if (regionList.length === 0) {
                 alert("No se pudo cargar ninguna plantilla. Por favor, revisa la URL.");
                 return;
@@ -168,7 +172,7 @@
             document.getElementById("start-dictation").addEventListener("click", iniciarDictado);
             document.getElementById("stop-dictation").addEventListener("click", detenerDictado);
 
-            avanzarRegion(); // Inicializa la primera región
+            avanzarRegion();
         });
 
         function finalizarExploracion() {
