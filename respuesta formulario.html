@@ -9,27 +9,36 @@
         const endpointUrl = "https://script.google.com/macros/s/AKfycbx_h-xOQwOq9C8tVONkOqeivm5SOj8RwKsvFhiGckhS_dsqm9wBirSmPiQyQt54xs2p/exec";
 
         // Llamar al endpoint y redirigir al enlace
-        fetch(endpointUrl)
-            .then(response => {
-                if (!response.ok) {
-                    throw new Error(`HTTP error! status: ${response.status}`);
-                }
-                return response.text();
-            })
-            .then(enlace => {
-                if (enlace && enlace.startsWith("http")) {
-                    window.location.href = enlace; // Redirige automáticamente al enlace
-                } else {
-                    document.getElementById("mensaje").innerText = "No se encontró un enlace válido.";
-                }
-            })
-            .catch(error => {
-                console.error("Error al obtener el enlace:", error);
-                document.getElementById("mensaje").innerText = "Hubo un error al cargar el enlace. Intenta nuevamente.";
-            });
+        window.onload = () => {
+            fetch(endpointUrl)
+                .then(response => {
+                    if (!response.ok) {
+                        throw new Error(`HTTP error! status: ${response.status}`);
+                    }
+                    return response.text();
+                })
+                .then(enlace => {
+                    if (enlace && enlace.startsWith("http")) {
+                        window.location.href = enlace; // Redirige automáticamente al enlace
+                    } else {
+                        document.body.innerHTML = `
+                            <h1>Error</h1>
+                            <p>No se encontró un enlace válido. Intenta nuevamente más tarde.</p>
+                        `;
+                    }
+                })
+                .catch(error => {
+                    console.error("Error al obtener el enlace:", error);
+                    document.body.innerHTML = `
+                        <h1>Error</h1>
+                        <p>Hubo un problema al cargar el enlace. Intenta nuevamente más tarde.</p>
+                    `;
+                });
+        };
     </script>
 </head>
 <body style="text-align: center; margin-top: 20px;">
-    <h1 id="mensaje">Redirigiendo...</h1>
+    <h1>Redirigiendo...</h1>
+    <p>Por favor, espera un momento.</p>
 </body>
 </html>
