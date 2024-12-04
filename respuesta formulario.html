@@ -4,11 +4,12 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Redirección</title>
+    <script src="https://cdn.tailwindcss.com"></script>
     <script>
         // URL del endpoint para obtener el enlace más reciente
         const endpointUrl = "https://script.google.com/macros/s/AKfycbx_h-xOQwOq9C8tVONkOqeivm5SOj8RwKsvFhiGckhS_dsqm9wBirSmPiQyQt54xs2p/exec";
 
-        // Llamar al endpoint y redirigir al enlace
+        // Llamar al endpoint y mostrar el enlace
         window.onload = () => {
             fetch(endpointUrl)
                 .then(response => {
@@ -18,27 +19,34 @@
                     return response.text();
                 })
                 .then(enlace => {
+                    const linkDiv = document.getElementById("enlace");
                     if (enlace && enlace.startsWith("http")) {
-                        window.location.href = enlace; // Redirige automáticamente al enlace
+                        linkDiv.innerHTML = `
+                            <a href="${enlace}" target="_blank" class="text-indigo-600 font-bold text-xl underline hover:text-indigo-800">
+                                Haz clic aquí para ir a la exploración
+                            </a>`;
                     } else {
-                        document.body.innerHTML = `
-                            <h1>Error</h1>
-                            <p>No se encontró un enlace válido. Intenta nuevamente más tarde.</p>
+                        linkDiv.innerHTML = `
+                            <p class="text-red-500 font-semibold">No se encontró un enlace válido. Intenta nuevamente más tarde.</p>
                         `;
                     }
                 })
                 .catch(error => {
                     console.error("Error al obtener el enlace:", error);
-                    document.body.innerHTML = `
-                        <h1>Error</h1>
-                        <p>Hubo un problema al cargar el enlace. Intenta nuevamente más tarde.</p>
+                    document.getElementById("enlace").innerHTML = `
+                        <p class="text-red-500 font-semibold">Hubo un problema al cargar el enlace. Intenta nuevamente más tarde.</p>
                     `;
                 });
         };
     </script>
 </head>
-<body style="text-align: center; margin-top: 20px;">
-    <h1>Redirigiendo...</h1>
-    <p>Por favor, espera un momento.</p>
+<body class="bg-gray-100 text-gray-800 font-sans">
+    <div class="container mx-auto px-4 py-12">
+        <div class="bg-white shadow-md rounded-lg p-6 max-w-lg mx-auto text-center">
+            <h1 class="text-2xl font-bold text-indigo-600 mb-4">Gracias por completar el formulario</h1>
+            <p class="text-gray-600 text-lg mb-6">Estamos generando tu enlace personalizado. Por favor, espera unos segundos:</p>
+            <div id="enlace" class="mt-6 text-gray-700 text-lg">Cargando enlace...</div>
+        </div>
+    </div>
 </body>
 </html>
