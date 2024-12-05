@@ -1,0 +1,12 @@
+{
+  "name": "vetintelligenceai",
+  "version": "1.0.0",
+  "description": "Funciones para Netlify con OpenAI",
+  "main": "index.js",
+  "scripts": {
+    "build": "echo 'Netlify Build Script'"
+  },
+  "dependencies": {
+    "node-fetch": "^2.6.1"
+  }
+}
