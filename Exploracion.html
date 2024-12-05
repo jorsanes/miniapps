@@ -24,8 +24,7 @@
         const results = {};
         let recognition;
         let isListening = false;
-        const apiKey = "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"; // Tu clave API
-
+       const apiKey = process.env.OpenAI_API_KEY;
         function actualizarEstadoDictado(estado) {
             const statusElement = document.getElementById("dictation-status");
             if (estado === "active") {
