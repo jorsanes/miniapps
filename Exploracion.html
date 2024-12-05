@@ -24,7 +24,18 @@
         const results = {};
         let recognition;
         let isListening = false;
-       const apiKey = process.env.OpenAI_API_KEY;
+
+       fetch("/.netlify/functions/openai", {
+  method: "POST",
+  headers: { "Content-Type": "application/json" },
+  body: JSON.stringify({ prompt: userPrompt })
+})
+  .then(response => response.json())
+  .then(data => {
+    console.log(data.text);
+  })
+  .catch(error => console.error("Error:", error));
+
         function actualizarEstadoDictado(estado) {
             const statusElement = document.getElementById("dictation-status");
             if (estado === "active") {
