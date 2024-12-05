@@ -25,14 +25,14 @@
         let recognition;
         let isListening = false;
 
-       fetch("/.netlify/functions/openai", {
+fetch("/functions/openai", {
   method: "POST",
   headers: { "Content-Type": "application/json" },
   body: JSON.stringify({ prompt: userPrompt })
 })
   .then(response => response.json())
   .then(data => {
-    console.log(data.text);
+    console.log(data.text); // Muestra el resultado en consola
   })
   .catch(error => console.error("Error:", error));
 
