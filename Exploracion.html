@@ -55,7 +55,7 @@
         let regionList = [];
         let comentariosPorRegion = [];
         let comentariosIA = [];
-        const openAiEndpoint = "/.netlify/functions/openai"; // Endpoint de IA
+        const openAiEndpoint = "/functions/openai"; // Endpoint de IA
 
         async function procesarConIA(comentario) {
             if (!comentario) return "Sin comentarios";
@@ -132,6 +132,14 @@
                     <strong>${region}:</strong>
                     <p>Original: ${comentario}</p>
                     <p>IA: ${comentarioIA}</p>
+                    <div>
+                        <label>
+                            <input type="radio" name="region-${i}" value="${comentario}" checked> Usar Original
+                        </label>
+                        <label>
+                            <input type="radio" name="region-${i}" value="${comentarioIA}"> Usar IA
+                        </label>
+                    </div>
                 `;
                 tablaResumen.appendChild(row);
             }
@@ -149,9 +157,14 @@
             cargarRegion(indexActual + 1);
         });
 
-        document.getElementById("btn-anterior").addEventListener("click", () => {
-            const indexActual = regionList.indexOf(document.getElementById("region-actual").textContent);
-            cargarRegion(indexActual - 1);
+        document.getElementById("guardar-resumen").addEventListener("click", () => {
+            const resumenFinal = regionList.map((region, index) => {
+                const seleccion = document.querySelector(`input[name="region-${index}"]:checked`).value;
+                return { region, comentario: seleccion };
+            });
+
+            console.log("Resumen guardado:", resumenFinal);
+            alert("Resumen guardado correctamente. Revisa la consola para más detalles.");
         });
 
         configurarPlantilla();
