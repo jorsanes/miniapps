@@ -5,19 +5,27 @@ exports.handler = async (event, context) => {
   const body = JSON.parse(event.body);
 
   try {
-    const response = await fetch("https://api.openai.com/v1/completions", {
+    const response = await fetch("https://api.openai.com/v1/chat/completions", {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
         Authorization: `Bearer ${apiKey}`,
       },
       body: JSON.stringify({
-        model: "gpt-3.5-turbo", // Cambiado el modelo a uno compatible
-        prompt: body.prompt,
+        model: "gpt-3.5-turbo", // Modelo actualizado
+        messages: [
+          {
+            role: "system", // Contexto inicial para el modelo
+            content: "Eres un experto veterinario que mejora comentarios clínicos de ecografías.",
+          },
+          {
+            role: "user", // Mensaje del usuario
+            content: body.prompt,
+          },
+        ],
         max_tokens: body.max_tokens || 150,
         temperature: body.temperature || 0.7,
       }),
-
     });
 
     if (!response.ok) {
@@ -32,7 +40,7 @@ exports.handler = async (event, context) => {
       throw new Error("La API de OpenAI no devolvió resultados en 'choices'");
     }
 
-    const text = data.choices[0].text.trim();
+    const text = data.choices[0].message.content.trim();
     return {
       statusCode: 200,
       body: JSON.stringify({ result: text }),
