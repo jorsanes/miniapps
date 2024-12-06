@@ -6,274 +6,105 @@
     <title>Exploración Veterinaria</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <style>
-        #dictation-status {
-            font-size: 0.875rem;
+        body {
+            background-color: #1a202c;
+            color: #cbd5e0;
+            font-family: Arial, sans-serif;
+        }
+
+        .active {
             font-weight: bold;
+            color: #48bb78;
         }
-        #dictation-status.active {
-            color: #10b981; /* Verde */
+
+        textarea {
+            background-color: #2d3748;
+            color: #cbd5e0;
+            border: 1px solid #4a5568;
         }
-        #dictation-status.inactive {
-            color: #ef4444; /* Rojo */
-        }
-        .hidden { display: none; }
     </style>
+</head>
+<body>
+    <div class="container mx-auto mt-10 p-5">
+        <h1 class="text-3xl text-center mb-5">Exploración</h1>
+        <div id="exploracion-container" class="text-center">
+            <p id="region-actual" class="text-xl mb-3">Cargando región...</p>
+            <textarea id="comentarios" rows="5" cols="50" placeholder="Escribe tus observaciones aquí..." class="w-full p-2"></textarea>
+
+            <div id="estado-dictado" class="mt-2 text-red-400">Dictado Desactivado</div>
+
+            <div class="flex justify-center mt-5">
+                <button id="btn-dictado" class="bg-green-500 hover:bg-green-700 text-white py-2 px-4 rounded mr-2">Iniciar Dictado</button>
+                <button id="btn-detener-dictado" class="bg-red-500 hover:bg-red-700 text-white py-2 px-4 rounded mr-2">Detener Dictado</button>
+                <button id="btn-anterior" class="bg-gray-500 hover:bg-gray-700 text-white py-2 px-4 rounded mr-2">Atrás</button>
+                <button id="btn-omitir" class="bg-gray-500 hover:bg-gray-700 text-white py-2 px-4 rounded mr-2">Omitir</button>
+                <button id="btn-siguiente" class="bg-blue-500 hover:bg-blue-700 text-white py-2 px-4 rounded">Siguiente</button>
+            </div>
+        </div>
+
+        <div id="resumen-container" class="hidden mt-10">
+            <h2 class="text-2xl mb-5">Resumen de Observaciones</h2>
+            <div id="tabla-resumen" class="overflow-auto max-h-96">
+                <!-- Aquí se generará la tabla de resumen dinámicamente -->
+            </div>
+        </div>
+    </div>
+
     <script>
         let regionList = [];
-        let currentRegionIndex = 0;
-        const results = {};
-        let recognition;
-        let isListening = false;
+        let comentariosPorRegion = [];
 
-fetch("/functions/openai", {
-  method: "POST",
-  headers: { "Content-Type": "application/json" },
-  body: JSON.stringify({ prompt: userPrompt })
-})
-  .then(response => response.json())
-  .then(data => {
-    console.log(data.text); // Muestra el resultado en consola
-  })
-  .catch(error => console.error("Error:", error));
+        function configurarPlantilla() {
+            const urlParams = new URLSearchParams(window.location.search);
+            const plantilla = urlParams.get('plantilla');
+            console.log("Plantilla recibida:", plantilla);
 
-        function actualizarEstadoDictado(estado) {
-            const statusElement = document.getElementById("dictation-status");
-            if (estado === "active") {
-                statusElement.textContent = "Dictado Activado";
-                statusElement.className = "active";
+            if (plantilla === "Abdominal") {
+                regionList = [
+                    "Vejiga", "Próstata / Útero", "Riñón Izquierdo", "Bazo", "Estómago", "Hígado y Vesícula", "Riñón Derecho", "Páncreas", "Glándulas Adrenales", "Asas Intestinales", "Ganglios Linfáticos", "Cavidad Abdominal"
+                ];
+            } else if (plantilla === "Cuello") {
+                regionList = ["Tiroides", "Linfónodos", "Glándulas Salivares"];
+            } else if (plantilla === "Cardiaca") {
+                regionList = [
+                    "Ventana Paraesternal Derecha", "Ventana Paraesternal Izquierda", "Ventana Subcostal Subxifoidea", "Valoración de Flujos", "Valoración de Turbulencias"
+                ];
             } else {
-                statusElement.textContent = "Dictado Desactivado";
-                statusElement.className = "inactive";
+                alert("Plantilla no reconocida. Por favor regrese al formulario.");
+                regionList = [];
             }
         }
 
-        function iniciarDictado() {
-            if (!('webkitSpeechRecognition' in window)) {
-                alert("Tu navegador no soporta reconocimiento de voz.");
+        function cargarRegion(index) {
+            if (index < 0 || index >= regionList.length) {
+                mostrarResumen();
                 return;
             }
 
-            if (!recognition) {
-                recognition = new webkitSpeechRecognition();
-                recognition.lang = "es-ES";
-                recognition.continuous = false;
-                recognition.interimResults = false;
-
-                recognition.onstart = () => {
-                    isListening = true;
-                    actualizarEstadoDictado("active");
-                };
-
-                recognition.onresult = (event) => {
-                    const comments = document.getElementById("comments");
-                    comments.value += (comments.value ? " " : "") + event.results[0][0].transcript;
-                };
-
-                recognition.onerror = (event) => {
-                    console.error("Error en el dictado:", event);
-                    alert("Hubo un problema con el dictado. Por favor, intenta de nuevo.");
-                };
-
-                recognition.onend = () => {
-                    isListening = false;
-                    actualizarEstadoDictado("inactive");
-                };
-            }
-
-            recognition.start();
+            const region = regionList[index];
+            document.getElementById("region-actual").textContent = region;
+            document.getElementById("comentarios").value = comentariosPorRegion[index] || "";
         }
 
-        function detenerDictado() {
-            if (recognition) {
-                isListening = false;
-                recognition.stop();
-                actualizarEstadoDictado("inactive");
-            }
+        function mostrarResumen() {
+            document.getElementById("exploracion-container").classList.add("hidden");
+            document.getElementById("resumen-container").classList.remove("hidden");
+
+            const tablaResumen = document.getElementById("tabla-resumen");
+            tablaResumen.innerHTML = regionList.map((region, i) => {
+                const comentario = comentariosPorRegion[i] || "Sin comentarios";
+                return `<div class='border-b p-2'><strong>${region}:</strong> ${comentario}</div>`;
+            }).join("");
         }
 
-        function configurarPlantilla() {
-    const params = new URLSearchParams(window.location.search);
-    const plantilla = params.get("plantilla");
-    console.log("Plantilla recibida:", plantilla);
-
-    if (plantilla === "Abdominal") {
-        regionList = [
-            "Vejiga", "Próstata", "Útero y Ovarios", "Riñón Izquierdo", "Bazo",
-            "Estómago", "Hígado y Vesícula Biliar", "Riñón Derecho", "Páncreas",
-            "Glándulas Adrenales", "Asas Intestinales", "Ganglios Linfáticos", "Cavidad Abdominal"
-        ];
-    } else if (plantilla === "Cuello") {
-        regionList = ["Tiroides", "Linfonodos", "Glándulas Salivares"];
-    } else if (plantilla === "Cardiaca") {
-        regionList = [
-            "Ventana Paraesternal Derecha", "Ventana Paraesternal Izquierda",
-            "Ventana Subcostal Subxifoidea", "Valoración de Flujos",
-            "Valoración de Turbulencias", "Mediciones Modo M"
-        ];
-    } else {
-        alert("Plantilla no válida. Revisa el enlace.");
-        console.error("Error: Plantilla no válida:", plantilla);
-        regionList = [];
-    }
-}
-
-        async function procesarConIA(comentario) {
-            if (!comentario) return "Sin comentarios";
-
-            try {
-                const response = await fetch("https://api.openai.com/v1/completions", {
-                    method: "POST",
-                    headers: {
-                        "Content-Type": "application/json",
-                        "Authorization": `Bearer ${apiKey}`
-                    },
-                    body: JSON.stringify({
-                        model: "text-davinci-003",
-                        prompt: `Eres un experto en ecografía veterinaria. Mejora el siguiente comentario clínico para hacerlo más profesional:\n\n"${comentario}"`,
-                        max_tokens: 100,
-                        temperature: 0.7
-                    })
-                });
-
-                const data = await response.json();
-                return data.choices[0]?.text?.trim() || "Error generando texto";
-            } catch (error) {
-                console.error("Error al llamar a la IA:", error);
-                return "Error generando texto";
-            }
-        }
-
-        async function mostrarResumen() {
-            document.getElementById("exploracion").classList.add("hidden");
-            document.getElementById("resumen").classList.remove("hidden");
-
-            const resumenTable = document.getElementById("resumen-table");
-            resumenTable.innerHTML = ""; // Limpia la tabla previa
-
-            for (const region of regionList) {
-                const comentario = results[region] || "Sin comentarios";
-                const textoMejorado = await procesarConIA(comentario);
-
-                const row = document.createElement("tr");
-                row.innerHTML = `
-                    <td class="p-2 border">${region}</td>
-                    <td class="p-2 border">${comentario}</td>
-                    <td class="p-2 border">${textoMejorado}</td>
-                    <td class="p-2 border">
-                        <select class="w-full bg-gray-700 text-white p-1" data-region="${region}">
-                            <option value="${comentario}" selected>Original</option>
-                            <option value="${textoMejorado}">Propuesta IA</option>
-                        </select>
-                    </td>
-                `;
-                resumenTable.appendChild(row);
-            }
-        }
-
-        function guardarResumen() {
-            const selects = document.querySelectorAll("#resumen-table select");
-            selects.forEach(select => {
-                const region = select.dataset.region;
-                results[region] = select.value;
-            });
-
-            console.log("Resumen final guardado:", results);
-            alert("Resumen guardado correctamente.");
-        }
-
-        document.addEventListener("DOMContentLoaded", () => {
-            configurarPlantilla();
-
-            document.getElementById("next-btn").addEventListener("click", () => {
-                const comments = document.getElementById("comments").value.trim();
-                const region = regionList[currentRegionIndex];
-                results[region] = comments;
-                currentRegionIndex++;
-                avanzarRegion();
-            });
-
-            document.getElementById("skip-btn").addEventListener("click", () => {
-                const region = regionList[currentRegionIndex];
-                results[region] = "Omitido";
-                currentRegionIndex++;
-                avanzarRegion();
-            });
-
-            document.getElementById("back-btn").addEventListener("click", retrocederRegion);
-            document.getElementById("start-dictation").addEventListener("click", iniciarDictado);
-            document.getElementById("stop-dictation").addEventListener("click", detenerDictado);
-            document.getElementById("save-summary-btn").addEventListener("click", guardarResumen);
-
-            avanzarRegion();
+        document.getElementById("btn-siguiente").addEventListener("click", () => {
+            const indexActual = regionList.indexOf(document.getElementById("region-actual").textContent);
+            comentariosPorRegion[indexActual] = document.getElementById("comentarios").value;
+            cargarRegion(indexActual + 1);
         });
 
-        function avanzarRegion() {
-            const regionTitle = document.getElementById("region-title");
-            const comments = document.getElementById("comments");
-
-            if (currentRegionIndex < regionList.length) {
-                regionTitle.textContent = `Exploración: ${regionList[currentRegionIndex]}`;
-                comments.value = results[regionList[currentRegionIndex]] || "";
-            } else {
-                mostrarResumen(); // Muestra el resumen cuando se completan todas las regiones
-            }
-        }
-
-        function retrocederRegion() {
-            if (currentRegionIndex > 0) {
-                currentRegionIndex--;
-                avanzarRegion();
-            }
-        }
+        configurarPlantilla();
+        cargarRegion(0);
     </script>
-</head>
-<body class="bg-gray-900 text-gray-100 font-sans">
-    <div id="exploracion" class="container mx-auto px-4 py-12">
-        <div class="bg-gray-800 shadow-md rounded-lg p-6 max-w-lg mx-auto text-center">
-            <h1 id="region-title" class="text-2xl font-bold text-teal-400 mb-4">Exploración</h1>
-            <textarea id="comments" class="w-full border-gray-600 bg-gray-700 text-gray-100 rounded-lg p-3 mb-4" rows="4" placeholder="Escribe tus observaciones aquí..."></textarea>
-            <div class="mb-2">
-                <p id="dictation-status" class="inactive">Dictado Desactivado</p>
-            </div>
-            <div class="flex justify-between mb-4">
-                <button id="start-dictation" class="bg-green-500 hover:bg-green-600 text-white font-bold py-2 px-4 rounded">
-                    Iniciar Dictado
-                </button>
-                <button id="stop-dictation" class="bg-red-500 hover:bg-red-600 text-white font-bold py-2 px-4 rounded">
-                    Detener Dictado
-                </button>
-            </div>
-            <div class="flex justify-between">
-                <button id="back-btn" class="bg-gray-500 hover:bg-gray-600 text-white font-bold py-2 px-4 rounded">
-                    Atrás
-                </button>
-                <button id="skip-btn" class="bg-gray-500 hover:bg-gray-600 text-white font-bold py-2 px-4 rounded">
-                    Omitir
-                </button>
-                <button id="next-btn" class="bg-teal-500 hover:bg-teal-600 text-white font-bold py-2 px-4 rounded">
-                    Siguiente
-                </button>
-            </div>
-        </div>
-    </div>
-    <div id="resumen" class="hidden container mx-auto px-4 py-12">
-        <div class="bg-gray-800 shadow-md rounded-lg p-6 max-w-4xl mx-auto">
-            <h1 class="text-2xl font-bold text-teal-400 mb-4">Resumen de la Exploración</h1>
-            <table class="w-full border-collapse border border-gray-600 mb-4 text-gray-100">
-                <thead>
-                    <tr>
-                        <th class="p-2 border">Región</th>
-                        <th class="p-2 border">Comentario</th>
-                        <th class="p-2 border">Propuesta IA</th>
-                        <th class="p-2 border">Seleccionar</th>
-                    </tr>
-                </thead>
-                <tbody id="resumen-table"></tbody>
-            </table>
-            <button id="save-summary-btn" class="bg-teal-500 hover:bg-teal-600 text-white font-bold py-2 px-4 rounded">
-                Guardar Resumen
-            </button>
-        </div>
-    </div>
 </body>
 </html>
