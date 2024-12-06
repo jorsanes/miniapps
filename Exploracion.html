@@ -59,7 +59,7 @@
 
         async function procesarConIA(comentario) {
             if (!comentario) return "Sin comentarios";
-
+        
             try {
                 const response = await fetch(openAiEndpoint, {
                     method: "POST",
@@ -68,18 +68,25 @@
                     },
                     body: JSON.stringify({
                         prompt: `Eres un experto veterinario. Mejora el siguiente comentario clínico para hacerlo más profesional:\n\n"${comentario}"`,
-                        max_tokens: 100,
+                        max_tokens: 120,
                         temperature: 0.7
                     })
                 });
 
+                if (!response.ok) {
+                    const errorDetails = await response.text();
+                    console.error("Error en la respuesta de IA:", errorDetails);
+                    return `Error del servidor: ${errorDetails}`;
+                }
+
                 const data = await response.json();
-                return data.choices[0]?.text?.trim() || "Error generando texto";
+                return data.choices[0]?.message?.content.trim() || "Error generando texto";
             } catch (error) {
                 console.error("Error al llamar a la IA:", error);
                 return "Error generando texto";
             }
         }
+
 
         function configurarPlantilla() {
             const urlParams = new URLSearchParams(window.location.search);
