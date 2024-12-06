@@ -47,12 +47,39 @@
             <div id="tabla-resumen" class="overflow-auto max-h-96">
                 <!-- Aquí se generará la tabla de resumen dinámicamente -->
             </div>
+            <button id="guardar-resumen" class="bg-green-500 hover:bg-green-700 text-white py-2 px-4 rounded mt-4">Guardar Resumen</button>
         </div>
     </div>
 
     <script>
         let regionList = [];
         let comentariosPorRegion = [];
+        let comentariosIA = [];
+        const openAiEndpoint = "/.netlify/functions/openai"; // Endpoint de IA
+
+        async function procesarConIA(comentario) {
+            if (!comentario) return "Sin comentarios";
+
+            try {
+                const response = await fetch(openAiEndpoint, {
+                    method: "POST",
+                    headers: {
+                        "Content-Type": "application/json"
+                    },
+                    body: JSON.stringify({
+                        prompt: `Eres un experto veterinario. Mejora el siguiente comentario clínico para hacerlo más profesional:\n\n"${comentario}"`,
+                        max_tokens: 100,
+                        temperature: 0.7
+                    })
+                });
+
+                const data = await response.json();
+                return data.choices[0]?.text?.trim() || "Error generando texto";
+            } catch (error) {
+                console.error("Error al llamar a la IA:", error);
+                return "Error generando texto";
+            }
+        }
 
         function configurarPlantilla() {
             const urlParams = new URLSearchParams(window.location.search);
@@ -86,21 +113,45 @@
             document.getElementById("comentarios").value = comentariosPorRegion[index] || "";
         }
 
-        function mostrarResumen() {
+        async function mostrarResumen() {
             document.getElementById("exploracion-container").classList.add("hidden");
             document.getElementById("resumen-container").classList.remove("hidden");
 
             const tablaResumen = document.getElementById("tabla-resumen");
-            tablaResumen.innerHTML = regionList.map((region, i) => {
+            tablaResumen.innerHTML = "";
+
+            for (let i = 0; i < regionList.length; i++) {
+                const region = regionList[i];
                 const comentario = comentariosPorRegion[i] || "Sin comentarios";
-                return `<div class='border-b p-2'><strong>${region}:</strong> ${comentario}</div>`;
-            }).join("");
+                const comentarioIA = await procesarConIA(comentario);
+                comentariosIA[i] = comentarioIA;
+
+                const row = document.createElement("div");
+                row.classList.add("border-b", "p-2");
+                row.innerHTML = `
+                    <strong>${region}:</strong>
+                    <p>Original: ${comentario}</p>
+                    <p>IA: ${comentarioIA}</p>
+                `;
+                tablaResumen.appendChild(row);
+            }
         }
 
         document.getElementById("btn-siguiente").addEventListener("click", () => {
             const indexActual = regionList.indexOf(document.getElementById("region-actual").textContent);
             comentariosPorRegion[indexActual] = document.getElementById("comentarios").value;
             cargarRegion(indexActual + 1);
+        });
+
+        document.getElementById("btn-omitir").addEventListener("click", () => {
+            const indexActual = regionList.indexOf(document.getElementById("region-actual").textContent);
+            comentariosPorRegion[indexActual] = "Omitido";
+            cargarRegion(indexActual + 1);
+        });
+
+        document.getElementById("btn-anterior").addEventListener("click", () => {
+            const indexActual = regionList.indexOf(document.getElementById("region-actual").textContent);
+            cargarRegion(indexActual - 1);
         });
 
         configurarPlantilla();
