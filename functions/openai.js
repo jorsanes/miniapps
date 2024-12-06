@@ -12,7 +12,7 @@ exports.handler = async (event, context) => {
         Authorization: `Bearer ${apiKey}`,
       },
       body: JSON.stringify({
-        model: "gpt-4o", // Asegúrate de que este modelo sea accesible
+        model: "gpt-4", // Asegúrate de que este modelo sea accesible
         prompt: body.prompt,
         max_tokens: body.max_tokens || 150,
         temperature: body.temperature || 0.7,
