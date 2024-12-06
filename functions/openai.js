@@ -12,7 +12,7 @@ exports.handler = async (event, context) => {
         Authorization: `Bearer ${apiKey}`,
       },
       body: JSON.stringify({
-        model: "gpt-3.5-turbo", // Modelo actualizado
+        model: "gpt-4", // Modelo actualizado
         messages: [
           {
             role: "system", // Contexto inicial para el modelo
