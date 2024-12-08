@@ -55,7 +55,7 @@
         let regionList = [];
         let comentariosPorRegion = [];
         let comentariosIA = [];
-        const openAiEndpoint = "/functions/openai"; // Endpoint de IA
+        const openAiEndpoint = "/.netlify/functions/openai"; // Endpoint de IA
 
         async function procesarConIA(comentario) {
             if (!comentario) return "Sin comentarios";
