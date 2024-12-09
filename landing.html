@@ -1,1 +1,56 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Landing - Vet Intelligence AI</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        body {
+            background-color: #1a202c;
+            color: #cbd5e0;
+            font-family: Arial, sans-serif;
+        }
+
+        .btn {
+            display: block;
+            width: 100%;
+            padding: 0.75rem;
+            margin-bottom: 1rem;
+            text-align: center;
+            background-color: #48bb78;
+            color: white;
+            font-weight: bold;
+            border-radius: 0.25rem;
+            transition: background-color 0.3s;
+        }
+        .btn:hover {
+            background-color: #38a169;
+        }
+    </style>
+</head>
+<body>
+    <div class="container mx-auto p-5 max-w-md text-center">
+        <h1 class="text-3xl font-bold mb-5">Vet Intelligence AI</h1>
+        <p id="welcome-message" class="text-lg mb-8"></p>
+
+        <a href="formulario.html" class="btn">Iniciar nueva exploración</a>
+        <a href="exploraciones_abiertas.html" class="btn">Revisar exploraciones abiertas</a>
+        <a href="informes.html" class="btn">Revisar informes</a>
+    </div>
+
+    <script>
+        // Recuperar la información del usuario
+        const userData = sessionStorage.getItem('user');
+        if (!userData) {
+            // Si no hay datos del usuario, redirigir al login
+            window.location.href = 'login.html';
+        } else {
+            const user = JSON.parse(userData);
+            const welcomeMessage = document.getElementById('welcome-message');
+            welcomeMessage.innerText = `Bienvenido, ${user.nombre || 'Usuario'} ${user.apellidos || ''}`;
+        }
+    </script>
+</body>
+</html>
 
