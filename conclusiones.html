@@ -1,0 +1,36 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Conclusiones</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body class="bg-gray-900 text-gray-200">
+    <div class="container mx-auto p-5 max-w-md">
+        <h1 class="text-2xl font-bold mb-5 text-center">Conclusiones y Recomendaciones</h1>
+        <div class="mb-4">
+            <label for="conclusiones" class="block mb-2">Conclusiones</label>
+            <textarea id="conclusiones" rows="5" class="w-full p-2 bg-gray-700 text-white border border-gray-600 rounded"></textarea>
+        </div>
+        <div class="mb-4">
+            <label for="recomendaciones" class="block mb-2">Recomendaciones</label>
+            <textarea id="recomendaciones" rows="5" class="w-full p-2 bg-gray-700 text-white border border-gray-600 rounded"></textarea>
+        </div>
+        
+        <button id="guardarConclusiones" class="w-full bg-green-500 hover:bg-green-700 text-white font-bold py-2 px-4 rounded">Guardar y Previsualizar Informe</button>
+    </div>
+
+    <script>
+        document.getElementById('guardarConclusiones').addEventListener('click', () => {
+            const conclusiones = document.getElementById('conclusiones').value;
+            const recomendaciones = document.getElementById('recomendaciones').value;
+
+            sessionStorage.setItem('conclusiones', conclusiones);
+            sessionStorage.setItem('recomendaciones', recomendaciones);
+
+            window.location.href = 'informe_previsualizacion.html';
+        });
+    </script>
+</body>
+</html>
