@@ -128,7 +128,7 @@ fetch("/functions/openai", {
                         "Authorization": `Bearer ${apiKey}`
                     },
                     body: JSON.stringify({
-                        model: "text-davinci-003",
+                        model: "gpt-4",
                         prompt: `Eres un experto en ecografía veterinaria. Mejora el siguiente comentario clínico para hacerlo más profesional:\n\n"${comentario}"`,
                         max_tokens: 100,
                         temperature: 0.7
