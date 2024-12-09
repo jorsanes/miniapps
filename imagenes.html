@@ -1,0 +1,49 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Agregar Imágenes</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body class="bg-gray-900 text-gray-200">
+    <div class="container mx-auto p-5 max-w-md">
+        <h1 class="text-2xl font-bold mb-5 text-center">Agregar Imágenes</h1>
+        <p class="mb-4">Selecciona las imágenes que deseas añadir al informe.</p>
+        <input type="file" id="inputImagenes" class="mb-4" multiple accept="image/*">
+        <div id="preview" class="grid grid-cols-2 gap-2 mb-4"></div>
+        
+        <button id="guardarImagenes" class="w-full bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded">Guardar Imágenes y Continuar</button>
+    </div>
+
+    <script>
+        let imagenes = [];
+        
+        const inputImagenes = document.getElementById('inputImagenes');
+        const preview = document.getElementById('preview');
+        
+        inputImagenes.addEventListener('change', () => {
+            preview.innerHTML = '';
+            imagenes = [];
+            const files = inputImagenes.files;
+            Array.from(files).forEach(file => {
+                const reader = new FileReader();
+                reader.onload = (e) => {
+                    const src = e.target.result;
+                    imagenes.push({ src, descripcion: "" });
+                    const img = document.createElement('img');
+                    img.src = src;
+                    img.classList.add('w-full', 'h-auto', 'border', 'border-gray-600');
+                    preview.appendChild(img);
+                };
+                reader.readAsDataURL(file);
+            });
+        });
+
+        document.getElementById('guardarImagenes').addEventListener('click', () => {
+            sessionStorage.setItem('imagenes', JSON.stringify(imagenes));
+            window.location.href = 'conclusiones.html';
+        });
+    </script>
+</body>
+</html>
