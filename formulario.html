@@ -3,135 +3,146 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Formulario Inicial</title>
+    <title>Asistente de Ecografía</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <style>
         body {
             background-color: #1a202c;
             color: #cbd5e0;
             font-family: Arial, sans-serif;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            height: 100vh;
-            margin: 0;
         }
-        .form-container {
-            background-color: #2d3748;
-            padding: 20px;
-            border-radius: 8px;
-            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
-            width: 100%;
-            max-width: 375px;
-        }
-        .form-title {
-            text-align: center;
-            margin-bottom: 20px;
-        }
-        label {
-            display: block;
-            margin-bottom: 5px;
-            font-weight: bold;
-        }
-        input, select {
-            width: 100%;
-            padding: 10px;
-            margin-bottom: 15px;
-            border: 1px solid #4a5568;
-            border-radius: 4px;
+        .input-field {
             background-color: #2d3748;
             color: #cbd5e0;
-        }
-        input::placeholder {
-            color: #a0aec0;
-        }
-        .btn {
+            border: 1px solid #4a5568;
+            padding: 0.5rem;
             width: 100%;
-            padding: 10px;
+            border-radius: 0.25rem;
+        }
+        .section-title {
+            margin-bottom: 1rem;
+            font-size: 1.25rem;
+            font-weight: bold;
+        }
+        .btn-primary {
             background-color: #48bb78;
             color: white;
-            border: none;
-            border-radius: 4px;
+            padding: 0.5rem 1rem;
+            border-radius: 0.25rem;
+            font-weight: bold;
+            text-align: center;
+            display: block;
+            margin: auto;
             cursor: pointer;
-            font-size: 16px;
         }
-        .btn:hover {
+        .btn-primary:hover {
             background-color: #38a169;
         }
     </style>
 </head>
 <body>
-    <div class="form-container">
-        <h1 class="form-title text-2xl">Formulario Inicial</h1>
-        <form id="formulario">
-            <label for="historia-clinica">Número de Historia Clínica</label>
-            <input type="text" id="historia-clinica" name="historia-clinica" required>
+    <div class="container mx-auto p-5 max-w-md">
+        <h1 class="text-3xl text-center mb-5">Asistente de Ecografía</h1>
 
-            <label for="nombre-paciente">Nombre del Paciente</label>
-            <input type="text" id="nombre-paciente" name="nombre-paciente" required>
+        <form id="ecografia-form">
+            <!-- Tipo de Ecografía -->
+            <div>
+                <label for="tipoEcografia" class="block mb-2">Tipo de Ecografía</label>
+                <select id="tipoEcografia" class="input-field" required>
+                    <option value="" disabled selected>Selecciona...</option>
+                    <option value="Abdominal">Abdominal</option>
+                    <option value="Cardiaca">Cardiaca</option>
+                    <option value="Cuello">Cuello</option>
+                </select>
+            </div>
 
-            <label for="especie">Especie</label>
-            <select id="especie" name="especie" required>
-                <option value="Perro">Perro</option>
-                <option value="Gato">Gato</option>
-                <option value="Caballo">Caballo</option>
-                <option value="Otros">Otros</option>
-            </select>
+            <!-- Espacio -->
+            <div class="my-5"></div>
 
-            <label for="raza">Raza</label>
-            <input type="text" id="raza" name="raza">
+            <!-- Datos del Paciente -->
+            <div class="section-title">Datos del Paciente</div>
 
-            <label for="edad">Edad (en años)</label>
-            <input type="number" id="edad" name="edad" min="0" placeholder="Ejemplo: 5">
+            <div>
+                <label for="historiaClinica" class="block mb-2">Número de Historia Clínica</label>
+                <input id="historiaClinica" type="text" class="input-field" required>
+            </div>
 
-            <label for="sexo">Sexo</label>
-            <select id="sexo" name="sexo">
-                <option value="Macho">Macho</option>
-                <option value="Macho Castrado">Macho Castrado</option>
-                <option value="Hembra">Hembra</option>
-                <option value="Hembra Castrada">Hembra Castrada</option>
-            </select>
+            <div class="mt-4">
+                <label for="nombrePaciente" class="block mb-2">Nombre del Paciente</label>
+                <input id="nombrePaciente" type="text" class="input-field" required>
+            </div>
 
-            <label for="peso">Peso (kg)</label>
-            <input type="number" id="peso" name="peso" min="0" placeholder="Ejemplo: 12">
+            <div class="mt-4">
+                <label for="especie" class="block mb-2">Especie</label>
+                <select id="especie" class="input-field" required>
+                    <option value="" disabled selected>Selecciona...</option>
+                    <option value="Perro">Perro</option>
+                    <option value="Gato">Gato</option>
+                    <option value="Caballo">Caballo</option>
+                    <option value="Otros">Otros</option>
+                </select>
+            </div>
 
-            <label for="plantilla">Tipo de Ecografía</label>
-            <select id="plantilla" name="plantilla" required>
-                <option value="Abdominal">Abdominal</option>
-                <option value="Cardiaca">Cardiaca</option>
-                <option value="Cuello">Cuello</option>
-            </select>
+            <div class="mt-4">
+                <label for="raza" class="block mb-2">Raza</label>
+                <input id="raza" type="text" class="input-field">
+            </div>
 
-            <button type="submit" class="btn">Continuar</button>
+            <div class="mt-4">
+                <label for="edad" class="block mb-2">Edad (años)</label>
+                <input id="edad" type="number" class="input-field" min="0">
+            </div>
+
+            <div class="mt-4">
+                <label for="sexo" class="block mb-2">Sexo</label>
+                <select id="sexo" class="input-field" required>
+                    <option value="" disabled selected>Selecciona...</option>
+                    <option value="Macho">Macho</option>
+                    <option value="Hembra">Hembra</option>
+                    <option value="Macho castrado">Macho castrado</option>
+                    <option value="Hembra castrada">Hembra castrada</option>
+                </select>
+            </div>
+
+            <div class="mt-4">
+                <label for="peso" class="block mb-2">Peso (kg)</label>
+                <input id="peso" type="number" class="input-field" min="0" required>
+            </div>
+
+            <!-- Espacio para el botón -->
+            <div class="my-6"></div>
+
+            <button type="button" id="iniciarAsistente" class="btn-primary">Iniciar Asistente</button>
         </form>
     </div>
+
     <script>
-        document.getElementById("formulario").addEventListener("submit", function(event) {
-            event.preventDefault();
+        document.getElementById("iniciarAsistente").addEventListener("click", () => {
+            const tipoEcografia = document.getElementById("tipoEcografia").value;
+            const historiaClinica = document.getElementById("historiaClinica").value;
+            const nombrePaciente = document.getElementById("nombrePaciente").value;
+            const especie = document.getElementById("especie").value;
+            const peso = document.getElementById("peso").value;
 
-            const formData = new FormData(event.target);
-            const data = {
-                historiaClinica: formData.get("historia-clinica"),
-                nombrePaciente: formData.get("nombre-paciente"),
-                especie: formData.get("especie"),
-                raza: formData.get("raza"),
-                edad: formData.get("edad"),
-                sexo: formData.get("sexo"),
-                peso: formData.get("peso"),
-                plantilla: formData.get("plantilla"),
-                fecha: new Date().toLocaleDateString("es-ES"),
-                hora: new Date().toLocaleTimeString("es-ES"),
-            };
-
-            // Calcular el BSA usando la fórmula de DuBois
-            if (data.especie && data.peso) {
-                const peso = parseFloat(data.peso);
-                const alturaEstimada = 1; // Altura fija en metros, puedes ajustar si hay un campo para ello
-                data.bsa = (0.007184 * Math.pow(peso, 0.425) * Math.pow(alturaEstimada, 0.725)).toFixed(2);
+            // Validar campos obligatorios
+            if (!tipoEcografia || !historiaClinica || !nombrePaciente || !especie || !peso) {
+                alert("Por favor, completa todos los campos obligatorios.");
+                return;
             }
 
-            console.log(data);
-            alert("Formulario enviado correctamente. Datos: " + JSON.stringify(data));
+            // Construir la URL de exploración
+            const exploracionURL = `https://vetintelligenceai.netlify.app/exploracion.html?plantilla=${tipoEcografia}`;
+            
+            // Almacenar datos del paciente en sessionStorage para usarlos en exploración
+            sessionStorage.setItem("datosPaciente", JSON.stringify({
+                historiaClinica,
+                nombrePaciente,
+                especie,
+                peso
+            }));
+
+            // Redirigir al módulo de exploración
+            window.location.href = exploracionURL;
         });
     </script>
 </body>
