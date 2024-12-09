@@ -1,0 +1,84 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Previsualización de Informe</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Agregar las librerías externas (ejemplo con CDN) -->
+    <!-- <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js" integrity="..." crossorigin="anonymous"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js" integrity="..." crossorigin="anonymous"></script> -->
+</head>
+<body class="bg-gray-900 text-gray-200">
+    <div class="container mx-auto p-5">
+        <h1 class="text-2xl font-bold mb-5 text-center">Previsualización del Informe</h1>
+
+        <div id="informe" class="bg-gray-800 p-4 rounded">
+            <h2 class="text-xl font-bold mb-2">Datos del Paciente</h2>
+            <p id="datos-paciente" class="mb-4"></p>
+
+            <h2 class="text-xl font-bold mb-2">Observaciones por Región</h2>
+            <ul id="lista-observaciones" class="mb-4 list-disc list-inside"></ul>
+
+            <h2 class="text-xl font-bold mb-2">Imágenes</h2>
+            <div id="lista-imagenes" class="grid grid-cols-2 gap-2 mb-4"></div>
+
+            <h2 class="text-xl font-bold mb-2">Conclusiones y Recomendaciones</h2>
+            <p id="texto-conclusiones" class="mb-2"></p>
+            <p id="texto-recomendaciones" class="mb-4"></p>
+
+            <h2 class="text-xl font-bold mb-2">Firma</h2>
+            <p class="mb-4 italic text-gray-400">Aquí se podría implementar un canvas para la firma. Por ahora, firma no implementada.</p>
+        </div>
+
+        <button id="generarPDF" class="w-full bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded mt-5">Generar PDF y Cerrar Exploración</button>
+    </div>
+
+    <script>
+        const datosPaciente = JSON.parse(sessionStorage.getItem('datosPaciente')) || {};
+        const observaciones = JSON.parse(sessionStorage.getItem('observaciones')) || [];
+        const imagenes = JSON.parse(sessionStorage.getItem('imagenes')) || [];
+        const conclusiones = sessionStorage.getItem('conclusiones') || '';
+        const recomendaciones = sessionStorage.getItem('recomendaciones') || '';
+
+        // Mostrar datos del paciente
+        const dp = document.getElementById('datos-paciente');
+        dp.innerText = `Historia: ${datosPaciente.historiaClinica}, Paciente: ${datosPaciente.nombrePaciente}, Especie: ${datosPaciente.especie}, Peso: ${datosPaciente.peso} kg`;
+
+        // Observaciones
+        const listaObservaciones = document.getElementById('lista-observaciones');
+        observaciones.forEach(obs => {
+            const li = document.createElement('li');
+            li.innerText = `${obs.region}: ${obs.comentario}`;
+            listaObservaciones.appendChild(li);
+        });
+
+        // Imágenes
+        const listaImagenes = document.getElementById('lista-imagenes');
+        imagenes.forEach(img => {
+            const imageElement = document.createElement('img');
+            imageElement.src = img.src;
+            imageElement.classList.add('w-full', 'h-auto', 'border', 'border-gray-600');
+            listaImagenes.appendChild(imageElement);
+        });
+
+        // Conclusiones y recomendaciones
+        document.getElementById('texto-conclusiones').innerText = conclusiones;
+        document.getElementById('texto-recomendaciones').innerText = recomendaciones;
+
+        document.getElementById('generarPDF').addEventListener('click', async () => {
+            alert('Aquí se generaría el PDF con html2canvas + jsPDF. Por simplicidad, solo simularé el cierre.');
+            
+            // Limpieza (opcional)
+            sessionStorage.removeItem('datosPaciente');
+            sessionStorage.removeItem('observaciones');
+            sessionStorage.removeItem('imagenes');
+            sessionStorage.removeItem('conclusiones');
+            sessionStorage.removeItem('recomendaciones');
+
+            // Redirigir a landing.html
+            window.location.href = 'landing.html';
+        });
+    </script>
+</body>
+</html>
