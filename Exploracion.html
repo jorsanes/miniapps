@@ -25,16 +25,33 @@
         let recognition;
         let isListening = false;
 
-fetch("/functions/openai", {
-  method: "POST",
-  headers: { "Content-Type": "application/json" },
-  body: JSON.stringify({ prompt: userPrompt })
-})
-  .then(response => response.json())
-  .then(data => {
-    console.log(data.text); // Muestra el resultado en consola
-  })
-  .catch(error => console.error("Error:", error));
+        async function procesarConIA(comentario) {
+            if (!comentario) return "Sin comentarios";
+
+            try {
+                const response = await fetch("/functions/openai", {
+                    method: "POST",
+                    headers: {
+                        "Content-Type": "application/json"
+                    },
+                    body: JSON.stringify({
+                        prompt: `Eres un experto en ecografía veterinaria. Mejora el siguiente comentario clínico para hacerlo más profesional:\n\n"${comentario}"`,
+                        max_tokens: 100,
+                        temperature: 0.7
+                    })
+                });
+
+                if (!response.ok) {
+                    throw new Error(`HTTP error! status: ${response.status}`);
+                }
+
+                const data = await response.json();
+                return data.choices[0]?.text?.trim() || "Error generando texto";
+            } catch (error) {
+                console.error("Error al llamar a la IA:", error);
+                return "Error del servidor: " + error.message;
+            }
+        }
 
         function actualizarEstadoDictado(estado) {
             const statusElement = document.getElementById("dictation-status");
@@ -92,11 +109,6 @@ fetch("/functions/openai", {
         }
 
         function configurarPlantilla() {
-    const params = new URLSearchParams(window.location.search);
-    const plantilla = params.get("plantilla");
-    console.log("Plantilla recibida:", plantilla);
-
-        function configurarPlantilla() {
             const urlParams = new URLSearchParams(window.location.search);
             const plantilla = urlParams.get('plantilla');
             console.log("Plantilla recibida:", plantilla);
@@ -109,80 +121,6 @@ fetch("/functions/openai", {
                 regionList.push("Ventana Paraesternal Derecha", "Ventana Paraesternal Izquierda", "Ventana Subcostal Subxifoidea", "Valoración de Flujos", "Valoración de Turbulencias");
             } else {
                 alert("Plantilla no reconocida. Por favor regrese al formulario.");
-            }
-        }
-            
-        function cargarRegion(index) {
-            if (index < 0 || index >= regionList.length) {
-                mostrarResumen();
-                return;
-            }
-
-            const region = regionList[index];
-            document.getElementById("region-actual").textContent = region;
-            document.getElementById("comentarios").value = comentariosPorRegion[index] || "";
-        }
-
-        function mostrarResumen() {
-            document.getElementById("exploracion-container").classList.add("hidden");
-            document.getElementById("resumen-container").classList.remove("hidden");
-
-            const tablaResumen = document.getElementById("tabla-resumen");
-            tablaResumen.innerHTML = regionList.map((region, i) => {
-                const comentario = comentariosPorRegion[i] || "Sin comentarios";
-                return `<div class='border-b p-2'>
-                    <strong>${region}:</strong> Original: ${comentario}<br>
-                    IA: <span id="ia-comentario-${i}">Generando...</span><br>
-                    <input type="radio" name="eleccion-${i}" value="original" checked> Usar Original
-                    <input type="radio" name="eleccion-${i}" value="ia"> Usar IA
-                </div>`;
-            }).join("");
-
-            regionList.forEach(async (region, i) => {
-                const textoIA = await obtenerTextoIA(comentariosPorRegion[i] || "Sin comentarios");
-                document.getElementById(`ia-comentario-${i}`).textContent = textoIA;
-            });
-        }
-
-        document.getElementById("btn-siguiente").addEventListener("click", () => {
-            const indexActual = regionList.indexOf(document.getElementById("region-actual").textContent);
-            comentariosPorRegion[indexActual] = document.getElementById("comentarios").value;
-            cargarRegion(indexActual + 1);
-        });
-
-        document.getElementById("btn-omitir").addEventListener("click", () => {
-            const indexActual = regionList.indexOf(document.getElementById("region-actual").textContent);
-            comentariosPorRegion[indexActual] = "Sin comentarios";
-            cargarRegion(indexActual + 1);
-        });
-
-        configurarPlantilla();
-        cargarRegion(0);
-    </script>
-
-        async function procesarConIA(comentario) {
-            if (!comentario) return "Sin comentarios";
-
-            try {
-                const response = await fetch("https://api.openai.com/v1/completions", {
-                    method: "POST",
-                    headers: {
-                        "Content-Type": "application/json",
-                        "Authorization": `Bearer ${apiKey}`
-                    },
-                    body: JSON.stringify({
-                        model: "gpt-4",
-                        prompt: `Eres un experto en ecografía veterinaria. Mejora el siguiente comentario clínico para hacerlo más profesional:\n\n"${comentario}"`,
-                        max_tokens: 100,
-                        temperature: 0.7
-                    })
-                });
-
-                const data = await response.json();
-                return data.choices[0]?.text?.trim() || "Error generando texto";
-            } catch (error) {
-                console.error("Error al llamar a la IA:", error);
-                return "Error generando texto";
             }
         }
 
@@ -201,7 +139,7 @@ fetch("/functions/openai", {
                 row.innerHTML = `
                     <td class="p-2 border">${region}</td>
                     <td class="p-2 border">${comentario}</td>
-                    <td class="p-2 border">${textoMejorado}</td>
+                    <td class="p-2 border">${textoMejorado.startsWith("Error") ? `<span class='text-red-500'>${textoMejorado}</span>` : textoMejorado}</td>
                     <td class="p-2 border">
                         <select class="w-full bg-gray-700 text-white p-1" data-region="${region}">
                             <option value="${comentario}" selected>Original</option>
