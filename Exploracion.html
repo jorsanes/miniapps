@@ -96,27 +96,26 @@ fetch("/functions/openai", {
     const plantilla = params.get("plantilla");
     console.log("Plantilla recibida:", plantilla);
 
+        function configurarPlantilla() {
+    const urlParams = new URLSearchParams(window.location.search);
+    const plantilla = urlParams.get('plantilla');
+    console.log("Plantilla recibida:", plantilla);
+
     if (plantilla === "Abdominal") {
         regionList = [
-            "Vejiga", "Próstata", "Útero y Ovarios", "Riñón Izquierdo", "Bazo",
-            "Estómago", "Hígado y Vesícula Biliar", "Riñón Derecho", "Páncreas",
-            "Glándulas Adrenales", "Asas Intestinales", "Ganglios Linfáticos", "Cavidad Abdominal"
+            "Vejiga", "Próstata / Útero", "Riñón Izquierdo", "Bazo", "Estómago", "Hígado y Vesícula", "Riñón Derecho", "Páncreas", "Glándulas Adrenales", "Asas Intestinales", "Ganglios Linfáticos", "Cavidad Abdominal"
         ];
     } else if (plantilla === "Cuello") {
-        regionList = ["Tiroides", "Linfonodos", "Glándulas Salivares"];
+        regionList = ["Tiroides", "Linfónodos", "Glándulas Salivares"];
     } else if (plantilla === "Cardiaca") {
         regionList = [
-            "Ventana Paraesternal Derecha", "Ventana Paraesternal Izquierda",
-            "Ventana Subcostal Subxifoidea", "Valoración de Flujos",
-            "Valoración de Turbulencias", "Mediciones Modo M"
+            "Ventana Paraesternal Derecha", "Ventana Paraesternal Izquierda", "Ventana Subcostal Subxifoidea", "Valoración de Flujos", "Valoración de Turbulencias"
         ];
     } else {
-        alert("Plantilla no válida. Revisa el enlace.");
-        console.error("Error: Plantilla no válida:", plantilla);
+        alert("Plantilla no reconocida. Por favor regrese al formulario.");
         regionList = [];
     }
 }
-
         async function procesarConIA(comentario) {
             if (!comentario) return "Sin comentarios";
 
