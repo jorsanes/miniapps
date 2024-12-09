@@ -23,20 +23,15 @@
             </button>
         </form>
         <p id="errorMessage" class="text-red-500 text-center mt-4 hidden"></p>
+        
+        <p class="text-center text-sm mt-4 text-gray-400">
+            ¿No tienes cuenta? <a href="register.html" class="text-blue-400 hover:underline">Regístrate aquí</a>
+        </p>
     </div>
 
     <script>
-        // Usuario administrador predeterminado
-        const usuarios = [
-            {
-                email: "jorsanes@hotmail.com",
-                password: "joridoxx",
-                estado: "activo",
-                nombre: "Jorge",
-                apellidos: "Sánchez",
-                centro: "Vet Intelligence AI"
-            }
-        ];
+        // Cargar usuarios desde localStorage o inicializar si no existen
+        let usuarios = JSON.parse(localStorage.getItem('usuarios')) || [];
 
         function validarUsuario(email, password) {
             const usuario = usuarios.find(u => u.email === email);
@@ -46,10 +41,26 @@
             if (usuario.password !== password) {
                 return { exito: false, mensaje: "Contraseña incorrecta" };
             }
+
+            // Verificar si han pasado más de 7 días desde el registro
+            const fechaRegistro = new Date(usuario.fechaRegistro);
+            const ahora = new Date();
+            const diffTime = Math.abs(ahora - fechaRegistro);
+            const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+            if (diffDays > 7 && usuario.estado === "activo") {
+                usuario.estado = "congelado";
+                guardarUsuarios();
+            }
+
             if (usuario.estado !== "activo") {
                 return { exito: false, mensaje: `Usuario ${usuario.estado}` };
             }
+
             return { exito: true, usuario };
+        }
+
+        function guardarUsuarios() {
+            localStorage.setItem('usuarios', JSON.stringify(usuarios));
         }
 
         document.getElementById('loginForm').addEventListener('submit', function(e) {
@@ -61,15 +72,12 @@
             const errorMessage = document.getElementById('errorMessage');
 
             if (resultado.exito) {
-                // Guardar datos del usuario en sessionStorage
                 sessionStorage.setItem('user', JSON.stringify({
                     email: resultado.usuario.email,
                     nombre: resultado.usuario.nombre,
                     apellidos: resultado.usuario.apellidos,
                     centro: resultado.usuario.centro
                 }));
-
-                // Redirigir a landing.html
                 window.location.href = "landing.html";
             } else {
                 errorMessage.textContent = resultado.mensaje;
