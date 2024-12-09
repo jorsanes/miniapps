@@ -97,25 +97,69 @@ fetch("/functions/openai", {
     console.log("Plantilla recibida:", plantilla);
 
         function configurarPlantilla() {
-    const urlParams = new URLSearchParams(window.location.search);
-    const plantilla = urlParams.get('plantilla');
-    console.log("Plantilla recibida:", plantilla);
+            const urlParams = new URLSearchParams(window.location.search);
+            const plantilla = urlParams.get('plantilla');
+            console.log("Plantilla recibida:", plantilla);
 
-    if (plantilla === "Abdominal") {
-        regionList = [
-            "Vejiga", "Próstata / Útero", "Riñón Izquierdo", "Bazo", "Estómago", "Hígado y Vesícula", "Riñón Derecho", "Páncreas", "Glándulas Adrenales", "Asas Intestinales", "Ganglios Linfáticos", "Cavidad Abdominal"
-        ];
-    } else if (plantilla === "Cuello") {
-        regionList = ["Tiroides", "Linfónodos", "Glándulas Salivares"];
-    } else if (plantilla === "Cardiaca") {
-        regionList = [
-            "Ventana Paraesternal Derecha", "Ventana Paraesternal Izquierda", "Ventana Subcostal Subxifoidea", "Valoración de Flujos", "Valoración de Turbulencias"
-        ];
-    } else {
-        alert("Plantilla no reconocida. Por favor regrese al formulario.");
-        regionList = [];
-    }
-}
+            if (plantilla === "Abdominal") {
+                regionList.push("Vejiga", "Próstata / Útero", "Riñón Izquierdo", "Bazo", "Estómago", "Hígado y Vesícula", "Riñón Derecho", "Páncreas", "Glándulas Adrenales", "Asas Intestinales", "Ganglios Linfáticos", "Cavidad Abdominal");
+            } else if (plantilla === "Cuello") {
+                regionList.push("Tiroides", "Linfónodos", "Glándulas Salivares");
+            } else if (plantilla === "Cardiaca") {
+                regionList.push("Ventana Paraesternal Derecha", "Ventana Paraesternal Izquierda", "Ventana Subcostal Subxifoidea", "Valoración de Flujos", "Valoración de Turbulencias");
+            } else {
+                alert("Plantilla no reconocida. Por favor regrese al formulario.");
+            }
+        }
+            
+        function cargarRegion(index) {
+            if (index < 0 || index >= regionList.length) {
+                mostrarResumen();
+                return;
+            }
+
+            const region = regionList[index];
+            document.getElementById("region-actual").textContent = region;
+            document.getElementById("comentarios").value = comentariosPorRegion[index] || "";
+        }
+
+        function mostrarResumen() {
+            document.getElementById("exploracion-container").classList.add("hidden");
+            document.getElementById("resumen-container").classList.remove("hidden");
+
+            const tablaResumen = document.getElementById("tabla-resumen");
+            tablaResumen.innerHTML = regionList.map((region, i) => {
+                const comentario = comentariosPorRegion[i] || "Sin comentarios";
+                return `<div class='border-b p-2'>
+                    <strong>${region}:</strong> Original: ${comentario}<br>
+                    IA: <span id="ia-comentario-${i}">Generando...</span><br>
+                    <input type="radio" name="eleccion-${i}" value="original" checked> Usar Original
+                    <input type="radio" name="eleccion-${i}" value="ia"> Usar IA
+                </div>`;
+            }).join("");
+
+            regionList.forEach(async (region, i) => {
+                const textoIA = await obtenerTextoIA(comentariosPorRegion[i] || "Sin comentarios");
+                document.getElementById(`ia-comentario-${i}`).textContent = textoIA;
+            });
+        }
+
+        document.getElementById("btn-siguiente").addEventListener("click", () => {
+            const indexActual = regionList.indexOf(document.getElementById("region-actual").textContent);
+            comentariosPorRegion[indexActual] = document.getElementById("comentarios").value;
+            cargarRegion(indexActual + 1);
+        });
+
+        document.getElementById("btn-omitir").addEventListener("click", () => {
+            const indexActual = regionList.indexOf(document.getElementById("region-actual").textContent);
+            comentariosPorRegion[indexActual] = "Sin comentarios";
+            cargarRegion(indexActual + 1);
+        });
+
+        configurarPlantilla();
+        cargarRegion(0);
+    </script>
+
         async function procesarConIA(comentario) {
             if (!comentario) return "Sin comentarios";
 
