@@ -4,3 +4,12 @@ publish = "."
 
 [functions]
 node_bundler = "esbuild"
+
+[build]
+  publish = "." # O el directorio donde está tu archivo HTML principal
+  functions = ""netlify/functions"
+
+[[redirects]]
+  from = "/.netlify/functions/*"
+  to = "/functions/:splat"
+  status = 200
