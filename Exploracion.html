@@ -21,6 +21,8 @@
             background-color: #2d3748;
             color: #cbd5e0;
             border: 1px solid #4a5568;
+            width: 100%;
+            resize: none;
         }
 
         .text-red-500 {
@@ -30,6 +32,10 @@
         .text-green-500 {
             color: #48bb78;
         }
+
+        .text-yellow-500 {
+            color: #ecc94b;
+        }
     </style>
 </head>
 <body>
@@ -37,7 +43,7 @@
         <h1 class="text-3xl text-center mb-5">Exploración</h1>
         <div id="exploracion-container" class="text-center">
             <p id="region-actual" class="text-xl mb-3">Cargando región...</p>
-            <textarea id="comentarios" rows="5" cols="50" placeholder="Escribe tus observaciones aquí..." class="w-full p-2"></textarea>
+            <textarea id="comentarios" rows="5" placeholder="Escribe tus observaciones aquí..." class="p-2"></textarea>
 
             <div id="estado-dictado" class="mt-2 text-red-400">Dictado Desactivado</div>
 
@@ -72,30 +78,43 @@
     <script>
         const regionList = [];
         const comentariosPorRegion = [];
-        const comentariosIA = [];
         let currentRegionIndex = 0;
 
-        async function procesarConIA(comentario, index) {
-            try {
-                const response = await fetch("/.netlify/functions/openai", {
-                    method: "POST",
-                    headers: {
-                        "Content-Type": "application/json",
-                    },
-                    body: JSON.stringify({ prompt: `Eres un experto veterinario. Mejora este comentario clínico: '${comentario}'.` }),
-                });
+        let recognition;
+        try {
+            const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+            recognition = new SpeechRecognition();
+            recognition.continuous = true;
 
-                if (!response.ok) {
-                    comentariosIA[index] = `Error del servidor: HTTP error! status: ${response.status}`;
-                    return;
-                }
+            recognition.onresult = (event) => {
+                const textoDictado = Array.from(event.results)
+                    .map((result) => result[0].transcript)
+                    .join('');
+                document.getElementById("comentarios").value += textoDictado;
+            };
 
-                const data = await response.json();
-                comentariosIA[index] = data.result || "Sin respuesta de la IA";
-            } catch (error) {
-                comentariosIA[index] = `Error del servidor: ${error.message}`;
-            }
+            recognition.onerror = (event) => {
+                console.error("Error en el dictado:", event.error);
+                document.getElementById("estado-dictado").innerText = "Error en dictado: " + event.error;
+            };
+        } catch (e) {
+            console.error("Dictado no soportado en este navegador.");
+            document.getElementById("estado-dictado").innerText = "Dictado no soportado.";
         }
+
+        document.getElementById("btn-dictado").addEventListener("click", () => {
+            if (recognition) {
+                recognition.start();
+                document.getElementById("estado-dictado").innerText = "Dictado Activado";
+            }
+        });
+
+        document.getElementById("btn-detener-dictado").addEventListener("click", () => {
+            if (recognition) {
+                recognition.stop();
+                document.getElementById("estado-dictado").innerText = "Dictado Desactivado";
+            }
+        });
 
         function configurarPlantilla() {
             const urlParams = new URLSearchParams(window.location.search);
@@ -149,24 +168,39 @@
 
             for (let i = 0; i < regionList.length; i++) {
                 const comentario = comentariosPorRegion[i] || "Omitido";
-                await procesarConIA(comentario, i);
-                const comentarioIA = comentariosIA[i] || "Error generando texto";
 
                 const row = document.createElement("tr");
                 row.innerHTML = `
                     <td class="border border-gray-600 p-2">${regionList[i]}</td>
-                    <td class="border border-gray-600 p-2">${comentario}</td>
-                    <td class="border border-gray-600 p-2 ${comentarioIA.startsWith("Error") ? 'text-red-500' : 'text-green-500'}">${comentarioIA}</td>
+                    <td class="border border-gray-600 p-2">
+                        <textarea class="w-full bg-gray-800 text-white border border-gray-600 p-1">${comentario}</textarea>
+                    </td>
+                    <td class="border border-gray-600 p-2 text-yellow-500">En construcción</td>
                     <td class="border border-gray-600 p-2">
                         <select>
                             <option value="original">Original</option>
-                            <option value="ia">IA</option>
                         </select>
                     </td>
                 `;
                 tablaResumen.appendChild(row);
             }
         }
+
+        document.getElementById("guardar-resumen").addEventListener("click", () => {
+            const resumen = [];
+            const filas = document.querySelectorAll("#tabla-resumen tr");
+
+            filas.forEach((fila, index) => {
+                const region = regionList[index];
+                const comentario = fila.querySelector("textarea").value;
+                const seleccion = fila.querySelector("select").value;
+
+                resumen.push({ region, comentario, seleccion });
+            });
+
+            console.log("Datos para exportar:", resumen);
+            alert("Resumen guardado. Preparado para exportar.");
+        });
 
         configurarPlantilla();
         cargarRegion(0);
