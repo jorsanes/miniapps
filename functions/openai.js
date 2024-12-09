@@ -50,7 +50,10 @@ exports.handler = async (event, context) => {
             body: JSON.stringify({ result: data.choices[0].text.trim() })
         };
 
-    } catch (error) {
+    const body = await response.json().catch(() => {
+    throw new Error("La respuesta no es un JSON válido");
+});
+} catch (error) {
         console.error("Error en la función openai.js:", error);
         return {
             statusCode: 500,
