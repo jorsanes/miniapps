@@ -50,9 +50,15 @@
             <div class="flex justify-center mt-5">
                 <button id="btn-dictado" class="bg-green-500 hover:bg-green-700 text-white py-2 px-4 rounded mr-2">Iniciar Dictado</button>
                 <button id="btn-detener-dictado" class="bg-red-500 hover:bg-red-700 text-white py-2 px-4 rounded mr-2">Detener Dictado</button>
-                <button id="btn-anterior" class="bg-gray-500 hover:bg-gray-700 text-white py-2 px-4 rounded mr-2">Atrás</button>
-                <button id="btn-omitir" class="bg-gray-500 hover:bg-gray-700 text-white py-2 px-4 rounded mr-2">Omitir</button>
-                <button id="btn-siguiente" class="bg-blue-500 hover:bg-blue-700 text-white py-2 px-4 rounded">Siguiente</button>
+                <button id="btn-anterior" class="bg-gray-500 hover:bg-gray-600 text-white font-bold py-2 px-4 rounded mr-2">
+                    Atrás
+                </button>
+                <button id="btn-omitir" class="bg-gray-500 hover:bg-gray-600 text-white font-bold py-2 px-4 rounded mr-2">
+                    Omitir
+                </button>
+                <button id="btn-siguiente" class="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded">
+                    Siguiente
+                </button>
             </div>
         </div>
 
@@ -71,7 +77,14 @@
                     <!-- Contenido dinámico -->
                 </tbody>
             </table>
-            <button id="guardar-resumen" class="bg-green-500 hover:bg-green-700 text-white py-2 px-4 rounded mt-5">Guardar Resumen</button>
+            <button id="guardar-resumen" class="bg-green-500 hover:bg-green-700 text-white py-2 px-4 rounded mt-5">
+                Guardar Resumen
+            </button>
+            
+            <!-- Botón para pasar a la página de imágenes, inicialmente oculto -->
+            <button id="siguiente-imagenes" class="bg-blue-500 hover:bg-blue-700 text-white py-2 px-4 rounded mt-5 hidden">
+                Siguiente
+            </button>
         </div>
     </div>
 
@@ -199,7 +212,15 @@
             });
 
             console.log("Datos para exportar:", resumen);
-            alert("Resumen guardado. Preparado para exportar.");
+            sessionStorage.setItem('observaciones', JSON.stringify(resumen));
+            alert("Resumen guardado. Puedes pasar a la siguiente fase.");
+
+            // Mostrar el botón para siguiente fase (imagenes.html)
+            document.getElementById("siguiente-imagenes").classList.remove('hidden');
+        });
+
+        document.getElementById("siguiente-imagenes").addEventListener('click', () => {
+            window.location.href = 'imagenes.html';
         });
 
         configurarPlantilla();
