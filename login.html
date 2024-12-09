@@ -1,0 +1,58 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Iniciar Sesión</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        body {
+            background-color: #1a202c;
+            color: #cbd5e0;
+            font-family: Arial, sans-serif;
+        }
+    </style>
+</head>
+<body>
+    <div class="flex items-center justify-center min-h-screen">
+        <div class="bg-gray-800 p-6 rounded-lg shadow-lg w-full max-w-sm">
+            <h1 class="text-2xl font-bold text-center text-white mb-6">Iniciar Sesión</h1>
+            <form id="login-form" action="#" method="POST">
+                <div class="mb-4">
+                    <label for="email" class="block text-sm font-medium mb-2">Correo Electrónico</label>
+                    <input type="email" id="email" name="email" class="w-full p-2 border border-gray-600 rounded bg-gray-700 text-gray-200 focus:outline-none focus:ring-2 focus:ring-blue-500" required>
+                </div>
+                <div class="mb-4">
+                    <label for="password" class="block text-sm font-medium mb-2">Contraseña</label>
+                    <input type="password" id="password" name="password" class="w-full p-2 border border-gray-600 rounded bg-gray-700 text-gray-200 focus:outline-none focus:ring-2 focus:ring-blue-500" required>
+                </div>
+                <button type="submit" class="w-full bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded focus:outline-none focus:ring-2 focus:ring-blue-500">Iniciar Sesión</button>
+            </form>
+            <p class="text-center text-sm mt-4 text-gray-400">¿Olvidaste tu contraseña? <a href="#" class="text-blue-400 hover:underline">Recupérala aquí</a></p>
+        </div>
+    </div>
+
+    <script>
+        // Simulación de manejo básico de usuarios (esta parte se integrará con backend más adelante)
+        const usuarios = [
+            { email: "admin@example.com", password: "123456", estado: "activo", nombre: "Admin", apellidos: "Ejemplo", centro: "Centro A" },
+            { email: "user1@example.com", password: "password", estado: "activo", nombre: "User", apellidos: "Uno", centro: "Centro B" }
+        ];
+
+        document.getElementById('login-form').addEventListener('submit', function(e) {
+            e.preventDefault();
+            const email = document.getElementById('email').value;
+            const password = document.getElementById('password').value;
+
+            const usuario = usuarios.find(u => u.email === email && u.password === password);
+
+            if (usuario && usuario.estado === "activo") {
+                alert(`Bienvenido, ${usuario.nombre} ${usuario.apellidos}`);
+                window.location.href = "landing.html"; // Cambiar a la página de aterrizaje real
+            } else {
+                alert("Credenciales incorrectas o usuario inactivo.");
+            }
+        });
+    </script>
+</body>
+</html>
