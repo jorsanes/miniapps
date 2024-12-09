@@ -1,0 +1,125 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Formulario de Ingreso - Exploración Veterinaria</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        body {
+            background-color: #1a202c;
+            color: #cbd5e0;
+            font-family: Arial, sans-serif;
+        }
+
+        input, select {
+            background-color: #2d3748;
+            color: #cbd5e0;
+            border: 1px solid #4a5568;
+            width: 100%;
+            padding: 8px;
+            margin-bottom: 15px;
+        }
+
+        label {
+            margin-bottom: 5px;
+            display: block;
+        }
+
+        .btn {
+            display: block;
+            width: 100%;
+            padding: 10px;
+            text-align: center;
+            background-color: #48bb78;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            font-weight: bold;
+            cursor: pointer;
+        }
+
+        .btn:hover {
+            background-color: #38a169;
+        }
+
+        .container {
+            max-width: 500px;
+            margin: 50px auto;
+            padding: 20px;
+            background-color: #2d3748;
+            border-radius: 10px;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.5);
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1 class="text-2xl text-center mb-5">Formulario Inicial</h1>
+        <form id="formulario-ingreso">
+            <label for="numero-historia">Número de Historia Clínica</label>
+            <input type="text" id="numero-historia" name="numero-historia" placeholder="Ingrese el número de historia clínica" required>
+
+            <label for="fecha">Fecha</label>
+            <input type="date" id="fecha" name="fecha" required>
+
+            <label for="hora">Hora</label>
+            <input type="time" id="hora" name="hora" required>
+
+            <label for="nombre">Nombre del Paciente</label>
+            <input type="text" id="nombre" name="nombre" placeholder="Nombre del paciente" required>
+
+            <label for="especie">Especie</label>
+            <select id="especie" name="especie" required>
+                <option value="">Seleccione una especie</option>
+                <option value="Canino">Canino</option>
+                <option value="Felino">Felino</option>
+                <option value="Equino">Equino</option>
+                <option value="Otros">Otros</option>
+            </select>
+
+            <label for="raza">Raza</label>
+            <input type="text" id="raza" name="raza" placeholder="Ingrese la raza del paciente">
+
+            <label for="edad">Edad</label>
+            <input type="text" id="edad" name="edad" placeholder="Ingrese la edad del paciente" required>
+
+            <label for="sexo">Sexo</label>
+            <select id="sexo" name="sexo" required>
+                <option value="">Seleccione el sexo</option>
+                <option value="Macho">Macho</option>
+                <option value="Hembra">Hembra</option>
+            </select>
+
+            <label for="peso">Peso (kg)</label>
+            <input type="number" id="peso" name="peso" placeholder="Ingrese el peso en kg" step="0.1" required>
+
+            <button type="button" class="btn" id="btn-continuar">Continuar</button>
+        </form>
+    </div>
+
+    <script>
+        document.getElementById('btn-continuar').addEventListener('click', () => {
+            const formData = {
+                numeroHistoria: document.getElementById('numero-historia').value,
+                fecha: document.getElementById('fecha').value,
+                hora: document.getElementById('hora').value,
+                nombre: document.getElementById('nombre').value,
+                especie: document.getElementById('especie').value,
+                raza: document.getElementById('raza').value,
+                edad: document.getElementById('edad').value,
+                sexo: document.getElementById('sexo').value,
+                peso: document.getElementById('peso').value
+            };
+
+            if (!formData.numeroHistoria || !formData.fecha || !formData.hora || !formData.nombre || !formData.especie || !formData.edad || !formData.sexo || !formData.peso) {
+                alert('Por favor complete todos los campos obligatorios.');
+                return;
+            }
+
+            localStorage.setItem('formData', JSON.stringify(formData));
+            window.location.href = 'exploracion.html';
+        });
+    </script>
+</body>
+</html>
