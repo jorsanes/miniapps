@@ -1,49 +1,81 @@
 <!DOCTYPE html>
 <html lang="es">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Inicio de Sesión</title>
-  <script src="https://cdn.tailwindcss.com"></script>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Iniciar Sesión</title>
+    <script src="https://cdn.tailwindcss.com"></script>
 </head>
 <body class="bg-gray-900 text-gray-200 flex items-center justify-center h-screen">
-  <div class="bg-gray-800 p-6 rounded-lg shadow-lg w-full max-w-sm">
-    <h1 class="text-2xl font-bold text-center mb-6">Iniciar Sesión</h1>
-    <form id="loginForm" class="space-y-4">
-      <div>
-        <label for="email" class="block mb-2">Correo Electrónico</label>
-        <input type="email" id="email" class="w-full p-2 rounded bg-gray-700 text-gray-200" required />
-      </div>
-      <div>
-        <label for="password" class="block mb-2">Contraseña</label>
-        <input type="password" id="password" class="w-full p-2 rounded bg-gray-700 text-gray-200" required />
-      </div>
-      <button type="submit" class="w-full bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded">
-        Iniciar Sesión
-      </button>
-    </form>
-    <p id="errorMessage" class="text-red-500 text-center mt-4 hidden"></p>
-  </div>
+    <div class="bg-gray-800 p-6 rounded-lg shadow-lg w-full max-w-sm">
+        <h1 class="text-2xl font-bold text-center mb-6">Iniciar Sesión</h1>
+        <form id="loginForm" class="space-y-4">
+            <div>
+                <label for="email" class="block mb-2">Correo Electrónico</label>
+                <input type="email" id="email" class="w-full p-2 rounded bg-gray-700 text-gray-200" required />
+            </div>
+            <div>
+                <label for="password" class="block mb-2">Contraseña</label>
+                <input type="password" id="password" class="w-full p-2 rounded bg-gray-700 text-gray-200" required />
+            </div>
+            <button type="submit" class="w-full bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded">
+                Iniciar Sesión
+            </button>
+        </form>
+        <p id="errorMessage" class="text-red-500 text-center mt-4 hidden"></p>
+    </div>
 
-  <script src="users.js"></script>
-  <script>
-    document.getElementById("loginForm").addEventListener("submit", function (e) {
-      e.preventDefault();
-      const email = document.getElementById("email").value;
-      const password = document.getElementById("password").value;
+    <script>
+        // Usuario administrador predeterminado
+        const usuarios = [
+            {
+                email: "jorsanes@hotmail.com",
+                password: "joridoxx",
+                estado: "activo",
+                nombre: "Jorge",
+                apellidos: "Sánchez",
+                centro: "Vet Intelligence AI"
+            }
+        ];
 
-      const result = validateUser(email, password);
-      const errorMessage = document.getElementById("errorMessage");
+        function validarUsuario(email, password) {
+            const usuario = usuarios.find(u => u.email === email);
+            if (!usuario) {
+                return { exito: false, mensaje: "Usuario no encontrado" };
+            }
+            if (usuario.password !== password) {
+                return { exito: false, mensaje: "Contraseña incorrecta" };
+            }
+            if (usuario.estado !== "activo") {
+                return { exito: false, mensaje: `Usuario ${usuario.estado}` };
+            }
+            return { exito: true, usuario };
+        }
 
-      if (result.success) {
-        // Redirigir a la landing page
-        window.location.href = "landing.html";
-      } else {
-        // Mostrar mensaje de error
-        errorMessage.textContent = result.message;
-        errorMessage.classList.remove("hidden");
-      }
-    });
-  </script>
+        document.getElementById('loginForm').addEventListener('submit', function(e) {
+            e.preventDefault();
+            const email = document.getElementById('email').value;
+            const password = document.getElementById('password').value;
+
+            const resultado = validarUsuario(email, password);
+            const errorMessage = document.getElementById('errorMessage');
+
+            if (resultado.exito) {
+                // Guardar datos del usuario en sessionStorage
+                sessionStorage.setItem('user', JSON.stringify({
+                    email: resultado.usuario.email,
+                    nombre: resultado.usuario.nombre,
+                    apellidos: resultado.usuario.apellidos,
+                    centro: resultado.usuario.centro
+                }));
+
+                // Redirigir a landing.html
+                window.location.href = "landing.html";
+            } else {
+                errorMessage.textContent = resultado.mensaje;
+                errorMessage.classList.remove('hidden');
+            }
+        });
+    </script>
 </body>
 </html>
