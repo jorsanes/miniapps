@@ -24,13 +24,14 @@
             border-radius: 0.25rem;
             transition: background-color 0.3s;
         }
+
         .btn:hover {
             background-color: #38a169;
         }
     </style>
 </head>
 <body>
-    <div class="container mx-auto p-5 max-w-md text-center">
+    <div class="container mx-auto p-5 max-w-sm text-center">
         <h1 class="text-3xl font-bold mb-5">Vet Intelligence AI</h1>
         <p id="welcome-message" class="text-lg mb-8"></p>
 
@@ -40,10 +41,8 @@
     </div>
 
     <script>
-        // Recuperar la información del usuario
         const userData = sessionStorage.getItem('user');
         if (!userData) {
-            // Si no hay datos del usuario, redirigir al login
             window.location.href = 'login.html';
         } else {
             const user = JSON.parse(userData);
@@ -53,4 +52,3 @@
     </script>
 </body>
 </html>
-
