@@ -1,0 +1,82 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Registro de Usuario</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body class="bg-gray-900 text-gray-200 flex items-center justify-center h-screen">
+    <div class="bg-gray-800 p-6 rounded-lg shadow-lg w-full max-w-sm">
+        <h1 class="text-2xl font-bold text-center mb-6">Registro de Usuario</h1>
+        <form id="registerForm" class="space-y-4">
+            <div>
+                <label for="email" class="block mb-2">Correo Electrónico</label>
+                <input type="email" id="email" class="w-full p-2 rounded bg-gray-700 text-gray-200" required />
+            </div>
+            <div>
+                <label for="password" class="block mb-2">Contraseña</label>
+                <input type="password" id="password" class="w-full p-2 rounded bg-gray-700 text-gray-200" required />
+            </div>
+            <div>
+                <label for="nombre" class="block mb-2">Nombre</label>
+                <input type="text" id="nombre" class="w-full p-2 rounded bg-gray-700 text-gray-200" required />
+            </div>
+            <div>
+                <label for="apellidos" class="block mb-2">Apellidos</label>
+                <input type="text" id="apellidos" class="w-full p-2 rounded bg-gray-700 text-gray-200" required />
+            </div>
+            <div>
+                <label for="centro" class="block mb-2">Centro de Trabajo</label>
+                <input type="text" id="centro" class="w-full p-2 rounded bg-gray-700 text-gray-200" required />
+            </div>
+            <button type="submit" class="w-full bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded">Registrar</button>
+            <p id="errorMessage" class="text-red-500 text-center mt-4 hidden"></p>
+        </form>
+    </div>
+
+    <script>
+        let usuarios = JSON.parse(localStorage.getItem('usuarios')) || [];
+
+        function guardarUsuarios() {
+            localStorage.setItem('usuarios', JSON.stringify(usuarios));
+        }
+
+        document.getElementById('registerForm').addEventListener('submit', function(e) {
+            e.preventDefault();
+            const email = document.getElementById('email').value;
+            const password = document.getElementById('password').value;
+            const nombre = document.getElementById('nombre').value;
+            const apellidos = document.getElementById('apellidos').value;
+            const centro = document.getElementById('centro').value;
+
+            // Verificar si el usuario ya existe
+            const existe = usuarios.find(u => u.email === email);
+            if (existe) {
+                const errorMessage = document.getElementById('errorMessage');
+                errorMessage.textContent = "Ya existe un usuario con ese correo.";
+                errorMessage.classList.remove('hidden');
+                return;
+            }
+
+            // Crear el nuevo usuario
+            const nuevoUsuario = {
+                email,
+                password,
+                estado: "activo", // Activo por 7 días
+                nombre,
+                apellidos,
+                centro,
+                rol: "usuario",
+                fechaRegistro: new Date().toISOString()
+            };
+
+            usuarios.push(nuevoUsuario);
+            guardarUsuarios();
+
+            alert("Usuario registrado con éxito. Ahora puedes iniciar sesión.");
+            window.location.href = "login.html";
+        });
+    </script>
+</body>
+</html>
