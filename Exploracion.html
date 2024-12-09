@@ -73,6 +73,7 @@
         const regionList = [];
         const comentariosPorRegion = [];
         const comentariosIA = [];
+        let currentRegionIndex = 0;
 
         async function procesarConIA(comentario, index) {
             try {
@@ -111,6 +112,33 @@
                 alert("Plantilla no reconocida. Por favor regrese al formulario.");
             }
         }
+
+        function cargarRegion(index) {
+            if (index >= regionList.length) {
+                mostrarResumen();
+                return;
+            }
+            document.getElementById("region-actual").innerText = regionList[index];
+            document.getElementById("comentarios").value = comentariosPorRegion[index] || "";
+            currentRegionIndex = index;
+        }
+
+        document.getElementById("btn-siguiente").addEventListener("click", () => {
+            comentariosPorRegion[currentRegionIndex] = document.getElementById("comentarios").value;
+            cargarRegion(currentRegionIndex + 1);
+        });
+
+        document.getElementById("btn-anterior").addEventListener("click", () => {
+            if (currentRegionIndex > 0) {
+                comentariosPorRegion[currentRegionIndex] = document.getElementById("comentarios").value;
+                cargarRegion(currentRegionIndex - 1);
+            }
+        });
+
+        document.getElementById("btn-omitir").addEventListener("click", () => {
+            comentariosPorRegion[currentRegionIndex] = "Omitido";
+            cargarRegion(currentRegionIndex + 1);
+        });
 
         async function mostrarResumen() {
             document.getElementById("exploracion-container").classList.add("hidden");
