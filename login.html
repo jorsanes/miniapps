@@ -30,8 +30,31 @@
     </div>
 
     <script>
-        // Cargar usuarios desde localStorage o inicializar si no existen
+        // Cargar o inicializar el array de usuarios
         let usuarios = JSON.parse(localStorage.getItem('usuarios')) || [];
+
+        // Asegurar existencia del administrador
+        const adminEmail = "jorsanes@hotmail.com";
+        const adminPass = "joridoxx";
+        const adminExiste = usuarios.some(u => u.email === adminEmail);
+        if (!adminExiste) {
+            const adminUser = {
+                email: adminEmail,
+                password: adminPass,
+                nombre: "Jorge",
+                apellidos: "Sanes",
+                centro: "Centro Admin",
+                rol: "admin",
+                estado: "activo",
+                fechaRegistro: new Date().toISOString()
+            };
+            usuarios.push(adminUser);
+            localStorage.setItem('usuarios', JSON.stringify(usuarios));
+        }
+
+        function guardarUsuarios() {
+            localStorage.setItem('usuarios', JSON.stringify(usuarios));
+        }
 
         function validarUsuario(email, password) {
             const usuario = usuarios.find(u => u.email === email);
@@ -42,25 +65,24 @@
                 return { exito: false, mensaje: "Contraseña incorrecta" };
             }
 
-            // Verificar si han pasado más de 7 días desde el registro
-            const fechaRegistro = new Date(usuario.fechaRegistro);
-            const ahora = new Date();
-            const diffTime = Math.abs(ahora - fechaRegistro);
-            const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
-            if (diffDays > 7 && usuario.estado === "activo") {
-                usuario.estado = "congelado";
-                guardarUsuarios();
+            // Si no es administrador, verificar si han pasado más de 7 días
+            if (usuario.rol === "usuario") {
+                const fechaRegistro = new Date(usuario.fechaRegistro);
+                const ahora = new Date();
+                const diffTime = ahora - fechaRegistro;
+                const diffDays = diffTime / (1000 * 60 * 60 * 24);
+                // Si han pasado más de 7 días y está activo, congelar
+                if (diffDays > 7 && usuario.estado === "activo") {
+                    usuario.estado = "congelado";
+                    guardarUsuarios();
+                }
             }
 
             if (usuario.estado !== "activo") {
-                return { exito: false, mensaje: `Usuario ${usuario.estado}` };
+                return { exito: false, mensaje: `El usuario se encuentra ${usuario.estado}` };
             }
 
             return { exito: true, usuario };
-        }
-
-        function guardarUsuarios() {
-            localStorage.setItem('usuarios', JSON.stringify(usuarios));
         }
 
         document.getElementById('loginForm').addEventListener('submit', function(e) {
@@ -72,11 +94,12 @@
             const errorMessage = document.getElementById('errorMessage');
 
             if (resultado.exito) {
-                sessionStorage.setItem('user', JSON.stringify({
+                sessionStorage.setItem('usuarioLogeado', JSON.stringify({
                     email: resultado.usuario.email,
                     nombre: resultado.usuario.nombre,
                     apellidos: resultado.usuario.apellidos,
-                    centro: resultado.usuario.centro
+                    centro: resultado.usuario.centro,
+                    rol: resultado.usuario.rol
                 }));
                 window.location.href = "landing.html";
             } else {
