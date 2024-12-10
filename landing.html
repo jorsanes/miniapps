@@ -28,6 +28,10 @@
         .btn:hover {
             background-color: #38a169;
         }
+
+        #adminOptions {
+            margin-top: 2rem;
+        }
     </style>
 </head>
 <body>
@@ -38,16 +42,27 @@
         <a href="formulario.html" class="btn">Iniciar nueva exploración</a>
         <a href="exploraciones_abiertas.html" class="btn">Revisar exploraciones abiertas</a>
         <a href="informes.html" class="btn">Revisar informes</a>
+
+        <div id="adminOptions" style="display:none;">
+            <h2 class="text-xl font-bold mb-3">Administración</h2>
+            <a href="gestionUsuarios.html" class="btn">Gestión de Usuarios</a>
+        </div>
     </div>
 
     <script>
-        const userData = sessionStorage.getItem('user');
+        const userData = sessionStorage.getItem('usuarioLogeado');
         if (!userData) {
             window.location.href = 'login.html';
         } else {
             const user = JSON.parse(userData);
             const welcomeMessage = document.getElementById('welcome-message');
             welcomeMessage.innerText = `Bienvenido, ${user.nombre || 'Usuario'} ${user.apellidos || ''}`;
+
+            // Si el usuario es admin, mostrar las opciones de administración
+            if (user.rol === "admin") {
+                const adminOptions = document.getElementById('adminOptions');
+                adminOptions.style.display = 'block';
+            }
         }
     </script>
 </body>
