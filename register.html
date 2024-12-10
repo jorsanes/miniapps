@@ -36,7 +36,29 @@
     </div>
 
     <script>
+        // Cargar usuarios o inicializar el array si no existe
         let usuarios = JSON.parse(localStorage.getItem('usuarios')) || [];
+
+        // Comprobar si existe el administrador, si no crearlo
+        // El admin por defecto:
+        const adminEmail = "jorsanes@hotmail.com";
+        const adminPass = "joridoxx";
+
+        const adminExiste = usuarios.some(u => u.email === adminEmail);
+        if (!adminExiste) {
+            const adminUser = {
+                email: adminEmail,
+                password: adminPass,
+                nombre: "Jorge",
+                apellidos: "Sanchez",
+                centro: "Centro Admin",
+                rol: "admin",
+                estado: "activo",
+                fechaRegistro: new Date().toISOString()
+            };
+            usuarios.push(adminUser);
+            localStorage.setItem('usuarios', JSON.stringify(usuarios));
+        }
 
         function guardarUsuarios() {
             localStorage.setItem('usuarios', JSON.stringify(usuarios));
@@ -61,12 +83,12 @@
 
             // Crear el nuevo usuario
             const nuevoUsuario = {
-                email,
-                password,
+                email: email,
+                password: password,
                 estado: "activo", // Activo por 7 días
-                nombre,
-                apellidos,
-                centro,
+                nombre: nombre,
+                apellidos: apellidos,
+                centro: centro,
                 rol: "usuario",
                 fechaRegistro: new Date().toISOString()
             };
