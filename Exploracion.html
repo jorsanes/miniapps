@@ -11,9 +11,15 @@
             color: #cbd5e0;
             font-family: Arial, sans-serif;
         }
+
         .active {
             font-weight: bold;
             color: #48bb78;
+        }
+
+        .inactive {
+            font-weight: normal;
+            color: #f56565;
         }
 
         textarea {
@@ -24,165 +30,193 @@
             resize: none;
         }
 
-        .text-red-500 {
-            color: #f56565;
-        }
-
-        .text-green-500 {
-            color: #48bb78;
-        }
-
         .text-yellow-500 {
             color: #ecc94b;
         }
 
-        #partialResult {
-            color: #a0aec0; /* gris claro para texto provisional */
-            font-size: 0.875rem;
-            margin-top: 0.5rem;
-            min-height: 1.5rem; /* espacio mínimo para no mover la interfaz */
+        .btn {
+            @apply bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded;
         }
 
-        #estado-dictado {
+        .btn-gray {
+            @apply bg-gray-500 hover:bg-gray-600 text-white font-bold py-2 px-4 rounded;
+        }
+
+        .btn-green {
+            @apply bg-green-500 hover:bg-green-700 text-white font-bold py-2 px-4 rounded;
+        }
+
+        .btn-red {
+            @apply bg-red-500 hover:bg-red-700 text-white font-bold py-2 px-4 rounded;
+        }
+
+        #dictation-status {
             margin-top: 0.5rem;
+        }
+
+        /* Asegurar que el contenedor de tabla tenga overflow si es necesario */
+        #resumen-container table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+
+        #resumen-container th, #resumen-container td {
+            border: 1px solid #4a5568;
+            padding: 0.5rem;
         }
     </style>
 </head>
 <body>
     <div class="container mx-auto mt-10 p-5">
         <h1 class="text-3xl text-center mb-5">Exploración</h1>
+
         <div id="exploracion-container" class="text-center">
             <p id="region-actual" class="text-xl mb-3">Cargando región...</p>
-            <textarea id="comentarios" rows="5" placeholder="Escribe tus observaciones aquí..." class="p-2"></textarea>
-            <div id="partialResult"></div>
-            <div id="estado-dictado" class="mt-2 text-red-400">Dictado Desactivado</div>
+            <textarea id="comments" rows="5" placeholder="Escribe tus observaciones aquí..." class="p-2"></textarea>
+
+            <div id="dictation-status" class="inactive">Dictado Desactivado</div>
 
             <div class="flex justify-center mt-5 flex-wrap gap-2">
-                <button id="btn-dictado" class="bg-green-500 hover:bg-green-700 text-white py-2 px-4 rounded">
-                    Iniciar Dictado
-                </button>
-                <button id="btn-detener-dictado" class="bg-red-500 hover:bg-red-700 text-white py-2 px-4 rounded">
-                    Detener Dictado
-                </button>
-                <button id="btn-anterior" class="bg-gray-500 hover:bg-gray-600 text-white font-bold py-2 px-4 rounded">
-                    Atrás
-                </button>
-                <button id="btn-omitir" class="bg-gray-500 hover:bg-gray-600 text-white font-bold py-2 px-4 rounded">
-                    Omitir
-                </button>
-                <button id="btn-siguiente" class="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded">
-                    Siguiente
-                </button>
+                <button id="btn-dictado" class="btn-green">Iniciar Dictado</button>
+                <button id="btn-detener-dictado" class="btn-red">Detener Dictado</button>
+                <button id="btn-anterior" class="btn-gray">Atrás</button>
+                <button id="btn-omitir" class="btn-gray">Omitir</button>
+                <button id="btn-siguiente" class="btn">Siguiente</button>
             </div>
         </div>
 
         <div id="resumen-container" class="hidden mt-10">
             <h2 class="text-2xl mb-5">Resumen de Observaciones</h2>
-            <table class="table-auto w-full border-collapse border border-gray-700">
+            <table>
                 <thead>
                     <tr>
-                        <th class="border border-gray-600 p-2">Región</th>
-                        <th class="border border-gray-600 p-2">Comentario</th>
-                        <th class="border border-gray-600 p-2">Propuesta IA</th>
-                        <th class="border border-gray-600 p-2">Seleccionar</th>
+                        <th>Región</th>
+                        <th>Comentario</th>
+                        <th>Propuesta IA</th>
+                        <th>Seleccionar</th>
                     </tr>
                 </thead>
                 <tbody id="tabla-resumen">
                     <!-- Contenido dinámico -->
                 </tbody>
             </table>
-            <button id="guardar-resumen" class="bg-green-500 hover:bg-green-700 text-white py-2 px-4 rounded mt-5">
-                Guardar Resumen
-            </button>
-            
-            <!-- Botón para pasar a la página de imágenes, inicialmente oculto -->
-            <button id="siguiente-imagenes" class="bg-blue-500 hover:bg-blue-700 text-white py-2 px-4 rounded mt-5 hidden">
-                Siguiente
-            </button>
+            <button id="guardar-resumen" class="btn-green mt-5">Guardar Resumen</button>
+            <button id="siguiente-imagenes" class="btn mt-5 hidden">Siguiente</button>
         </div>
     </div>
 
     <script>
+        let recognition;
+        let isListening = false;
+
         const regionList = [];
         const comentariosPorRegion = [];
         let currentRegionIndex = 0;
 
-        let recognition;
-        let isDictationActive = false;
+        function actualizarEstadoDictado(estado) {
+            const statusElement = document.getElementById("dictation-status");
+            if (estado === "active") {
+                statusElement.textContent = "Dictado Activado";
+                statusElement.className = "active";
+            } else {
+                statusElement.textContent = "Dictado Desactivado";
+                statusElement.className = "inactive";
+            }
+        }
 
-        try {
-            const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
-            recognition = new SpeechRecognition();
-            recognition.continuous = true;
-            recognition.interimResults = true;
-            recognition.lang = 'es-ES';
+        function iniciarDictado() {
+            if (!('webkitSpeechRecognition' in window)) {
+                alert("Tu navegador no soporta reconocimiento de voz.");
+                return;
+            }
 
-            recognition.onresult = (event) => {
-                let interimTranscript = '';
-                let finalTranscript = '';
-                for (let i = event.resultIndex; i < event.results.length; i++) {
-                    const transcript = event.results[i][0].transcript;
-                    if (event.results[i].isFinal) {
-                        finalTranscript += transcript.trim() + ' ';
-                    } else {
-                        interimTranscript += transcript;
-                    }
-                }
+            if (!recognition) {
+                recognition = new webkitSpeechRecognition();
+                recognition.lang = "es-ES";
+                recognition.continuous = false;
+                recognition.interimResults = false;
 
-                if (interimTranscript) {
-                    document.getElementById("partialResult").innerText = "Escuchando: " + interimTranscript;
-                } else {
-                    document.getElementById("partialResult").innerText = "";
-                }
+                recognition.onstart = () => {
+                    isListening = true;
+                    actualizarEstadoDictado("active");
+                };
 
-                if (finalTranscript) {
-                    // Agregar el texto final al textarea
-                    const textarea = document.getElementById("comentarios");
-                    textarea.value += finalTranscript;
-                    document.getElementById("partialResult").innerText = "";
-                }
-            };
+                recognition.onresult = (event) => {
+                    const comments = document.getElementById("comments");
+                    const transcript = event.results[0][0].transcript.trim();
+                    comments.value += (comments.value ? " " : "") + transcript;
+                };
 
-            recognition.onstart = () => {
-                document.getElementById("estado-dictado").innerText = "Dictado Activado (Hablando...)";
-            };
+                recognition.onerror = (event) => {
+                    console.error("Error en el dictado:", event);
+                    alert("Hubo un problema con el dictado. Por favor, intenta de nuevo.");
+                };
 
-            recognition.onend = () => {
-                // Si quieres que se reinicie automáticamente, descomenta lo siguiente:
-                // if (isDictationActive) recognition.start();
-                document.getElementById("estado-dictado").innerText = "Dictado Detenido";
-            };
+                recognition.onend = () => {
+                    isListening = false;
+                    actualizarEstadoDictado("inactive");
+                };
+            }
 
-            recognition.onerror = (event) => {
-                console.error("Error en el dictado:", event.error);
-                document.getElementById("estado-dictado").innerText = "Error en dictado: " + event.error;
-            };
-        } catch (e) {
-            console.error("Dictado no soportado en este navegador.");
-            document.getElementById("estado-dictado").innerText = "Dictado no soportado.";
+            recognition.start();
+        }
+
+        function detenerDictado() {
+            if (recognition && isListening) {
+                isListening = false;
+                recognition.stop();
+                actualizarEstadoDictado("inactive");
+            }
         }
 
         document.getElementById("btn-dictado").addEventListener("click", () => {
-            if (recognition && !isDictationActive) {
-                isDictationActive = true;
-                recognition.start();
-                document.getElementById("estado-dictado").innerText = "Iniciando dictado...";
-            }
+            iniciarDictado();
         });
 
         document.getElementById("btn-detener-dictado").addEventListener("click", () => {
-            if (recognition && isDictationActive) {
-                isDictationActive = false;
-                recognition.stop();
-                document.getElementById("estado-dictado").innerText = "Dictado Desactivado";
+            detenerDictado();
+        });
+
+        document.getElementById("btn-siguiente").addEventListener("click", () => {
+            comentariosPorRegion[currentRegionIndex] = document.getElementById("comments").value;
+            cargarRegion(currentRegionIndex + 1);
+        });
+
+        document.getElementById("btn-anterior").addEventListener("click", () => {
+            if (currentRegionIndex > 0) {
+                comentariosPorRegion[currentRegionIndex] = document.getElementById("comments").value;
+                cargarRegion(currentRegionIndex - 1);
             }
+        });
+
+        document.getElementById("btn-omitir").addEventListener("click", () => {
+            comentariosPorRegion[currentRegionIndex] = "Omitido";
+            cargarRegion(currentRegionIndex + 1);
+        });
+
+        document.getElementById("guardar-resumen").addEventListener("click", () => {
+            const resumen = [];
+            const filas = document.querySelectorAll("#tabla-resumen tr");
+
+            filas.forEach((fila, index) => {
+                const region = regionList[index];
+                const comentario = fila.querySelector("textarea").value;
+                const seleccion = fila.querySelector("select").value;
+                resumen.push({ region, comentario, seleccion });
+            });
+
+            sessionStorage.setItem('observaciones', JSON.stringify(resumen));
+            alert("Resumen guardado. Puedes pasar a la siguiente fase.");
+            document.getElementById("siguiente-imagenes").classList.remove('hidden');
+        });
+
+        document.getElementById("siguiente-imagenes").addEventListener('click', () => {
+            window.location.href = 'imagenes.html';
         });
 
         function configurarPlantilla() {
             const urlParams = new URLSearchParams(window.location.search);
             const plantilla = urlParams.get('plantilla');
-            console.log("Plantilla recibida:", plantilla);
-
             if (plantilla === "Abdominal") {
                 regionList.push("Vejiga", "Próstata / Útero", "Riñón Izquierdo", "Bazo", "Estómago", "Hígado y Vesícula", "Riñón Derecho", "Páncreas", "Glándulas Adrenales", "Asas Intestinales", "Ganglios Linfáticos", "Cavidad Abdominal");
             } else if (plantilla === "Cuello") {
@@ -200,28 +234,11 @@
                 return;
             }
             document.getElementById("region-actual").innerText = regionList[index];
-            document.getElementById("comentarios").value = comentariosPorRegion[index] || "";
+            document.getElementById("comments").value = comentariosPorRegion[index] || "";
             currentRegionIndex = index;
         }
 
-        document.getElementById("btn-siguiente").addEventListener("click", () => {
-            comentariosPorRegion[currentRegionIndex] = document.getElementById("comentarios").value;
-            cargarRegion(currentRegionIndex + 1);
-        });
-
-        document.getElementById("btn-anterior").addEventListener("click", () => {
-            if (currentRegionIndex > 0) {
-                comentariosPorRegion[currentRegionIndex] = document.getElementById("comentarios").value;
-                cargarRegion(currentRegionIndex - 1);
-            }
-        });
-
-        document.getElementById("btn-omitir").addEventListener("click", () => {
-            comentariosPorRegion[currentRegionIndex] = "Omitido";
-            cargarRegion(currentRegionIndex + 1);
-        });
-
-        async function mostrarResumen() {
+        function mostrarResumen() {
             document.getElementById("exploracion-container").classList.add("hidden");
             document.getElementById("resumen-container").classList.remove("hidden");
 
@@ -230,15 +247,12 @@
 
             for (let i = 0; i < regionList.length; i++) {
                 const comentario = comentariosPorRegion[i] || "Omitido";
-
                 const row = document.createElement("tr");
                 row.innerHTML = `
-                    <td class="border border-gray-600 p-2">${regionList[i]}</td>
-                    <td class="border border-gray-600 p-2">
-                        <textarea class="w-full bg-gray-800 text-white border border-gray-600 p-1">${comentario}</textarea>
-                    </td>
-                    <td class="border border-gray-600 p-2 text-yellow-500">En construcción</td>
-                    <td class="border border-gray-600 p-2">
+                    <td>${regionList[i]}</td>
+                    <td><textarea class="w-full bg-gray-800 text-white border border-gray-600 p-1">${comentario}</textarea></td>
+                    <td class="text-yellow-500">En construcción</td>
+                    <td>
                         <select>
                             <option value="original">Original</option>
                         </select>
@@ -247,30 +261,6 @@
                 tablaResumen.appendChild(row);
             }
         }
-
-        document.getElementById("guardar-resumen").addEventListener("click", () => {
-            const resumen = [];
-            const filas = document.querySelectorAll("#tabla-resumen tr");
-
-            filas.forEach((fila, index) => {
-                const region = regionList[index];
-                const comentario = fila.querySelector("textarea").value;
-                const seleccion = fila.querySelector("select").value;
-
-                resumen.push({ region, comentario, seleccion });
-            });
-
-            console.log("Datos para exportar:", resumen);
-            sessionStorage.setItem('observaciones', JSON.stringify(resumen));
-            alert("Resumen guardado. Puedes pasar a la siguiente fase.");
-
-            // Mostrar el botón para siguiente fase (imagenes.html)
-            document.getElementById("siguiente-imagenes").classList.remove('hidden');
-        });
-
-        document.getElementById("siguiente-imagenes").addEventListener('click', () => {
-            window.location.href = 'imagenes.html';
-        });
 
         configurarPlantilla();
         cargarRegion(0);
