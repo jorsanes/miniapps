@@ -4,10 +4,13 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0"/>    
     <title>Previsualización del Informe</title>
+    <script src="https://cdn.tailwindcss.com"></script>
     <style>
         body {
             font-family: Arial, sans-serif;
             margin: 20px;
+            background-color: #1a202c;
+            color: #cbd5e0;
         }
         .container {
             max-width: 800px;
@@ -25,17 +28,14 @@
             gap: 10px;
         }
         .images-container img {
-            max-width: 200px;
+            max-width: 48%;
             border: 1px solid #ccc;
             padding: 5px;
-        }
-        .button-container {
-            text-align: center;
-            margin-bottom: 50px;
         }
         button {
             padding: 10px 20px;
             cursor: pointer;
+            margin-right: 10px;
         }
         .footer-text {
             text-align: center;
@@ -43,14 +43,20 @@
             margin-top: 50px;
             color: #666;
         }
+        .btn {
+            @apply bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded;
+        }
+        .btn-green {
+            @apply bg-green-500 hover:bg-green-700 text-white font-bold py-2 px-4 rounded;
+        }
     </style>
 </head>
 <body>
     <div class="container" id="informeContent">
-        <h1>Informe de Ecografía</h1>
+        <h1 class="text-3xl font-bold my-5">Informe de Ecografía</h1>
 
         <div class="section" id="datosPacienteSection">
-            <h2>Datos del Paciente</h2>
+            <h2 class="text-2xl mb-3">Datos del Paciente</h2>
             <p><strong>Historia Clínica:</strong> <span id="historiaClinica"></span></p>
             <p><strong>Nombre:</strong> <span id="nombrePaciente"></span></p>
             <p><strong>Especie:</strong> <span id="especie"></span></p>
@@ -60,54 +66,48 @@
         </div>
 
         <div class="section" id="observacionesSection">
-            <h2>Observaciones por Región</h2>
+            <h2 class="text-2xl mb-3">Observaciones por Región</h2>
             <div id="observacionesContainer"></div>
         </div>
 
         <div class="section" id="imagenesSection">
-            <h2>Imágenes</h2>
+            <h2 class="text-2xl mb-3">Imágenes</h2>
             <div class="images-container" id="imagenesContainer"></div>
         </div>
 
         <div class="section" id="conclusionesSection">
-            <h2>Conclusiones y Recomendaciones</h2>
+            <h2 class="text-2xl mb-3">Conclusiones y Recomendaciones</h2>
             <p><strong>Conclusiones:</strong> <span id="conclusiones"></span></p>
             <p><strong>Recomendaciones:</strong> <span id="recomendaciones"></span></p>
         </div>
     </div>
 
-    <div class="button-container">
-        <button id="btnGenerarPDF">Generar PDF</button>
+    <div class="text-center mb-10">
+        <button id="btnGenerarWord" class="btn-green">Generar Word</button>
+        <button id="btnFinalizar" class="btn">Finalizar</button>
     </div>
 
     <div class="footer-text">
-        <p>Al finalizar la generación de PDF, se dará por concluida la exploración.</p>
+        <p>Al finalizar, se dará por concluida la exploración.</p>
     </div>
 
-    <!-- Librerías html2canvas y jsPDF desde CDN -->
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+    <!-- Librería docx -->
+    <script src="https://cdn.jsdelivr.net/npm/docx@7.6.0/build/index.js"></script>
 
     <script>
-        document.addEventListener("DOMContentLoaded", function () {
-            // Cargamos datos desde sessionStorage
+        document.addEventListener("DOMContentLoaded", async function() {
             const historiaClinica = sessionStorage.getItem("historiaClinica") || "";
             const nombrePaciente = sessionStorage.getItem("nombrePaciente") || "";
             const especie = sessionStorage.getItem("especie") || "";
             const edad = sessionStorage.getItem("edad") || "";
             const sexo = sessionStorage.getItem("sexo") || "";
             const tipoEco = sessionStorage.getItem("tipoEco") || "";
-            
-            const observaciones = JSON.parse(sessionStorage.getItem("observaciones")) || []; 
-            // observaciones se espera que sea un array de objetos { region: "texto", observacion: "textoObservacion" }
 
-            const imagenes = JSON.parse(sessionStorage.getItem("imagenes")) || []; 
-            // imagenes se espera que sea un array de strings base64
-
+            const observaciones = JSON.parse(sessionStorage.getItem("observaciones")) || [];
+            const imagenes = JSON.parse(sessionStorage.getItem("imagenes")) || [];
             const conclusionesText = sessionStorage.getItem("conclusiones") || "";
             const recomendacionesText = sessionStorage.getItem("recomendaciones") || "";
 
-            // Insertar datos en el DOM
             document.getElementById("historiaClinica").textContent = historiaClinica;
             document.getElementById("nombrePaciente").textContent = nombrePaciente;
             document.getElementById("especie").textContent = especie;
@@ -119,50 +119,110 @@
             observaciones.forEach(obs => {
                 const div = document.createElement("div");
                 div.innerHTML = `<p><strong>Región:</strong> ${obs.region}</p>
-                                 <p><strong>Observaciones:</strong> ${obs.observacion}</p>
+                                 <p><strong>Observaciones:</strong> ${obs.comentario}</p>
                                  <hr>`;
                 obsContainer.appendChild(div);
             });
 
             const imgContainer = document.getElementById("imagenesContainer");
-            imagenes.forEach(imgData => {
+            for (let i = 0; i < imagenes.length; i++) {
                 const imgEl = document.createElement("img");
-                imgEl.src = imgData;
+                imgEl.src = imagenes[i];
                 imgContainer.appendChild(imgEl);
-            });
+            }
 
             document.getElementById("conclusiones").textContent = conclusionesText;
             document.getElementById("recomendaciones").textContent = recomendacionesText;
 
-            // Función para generar el PDF
-            document.getElementById("btnGenerarPDF").addEventListener("click", async function () {
-                const { jsPDF } = window.jspdf;
+            const { Document, Packer, Paragraph, TextRun, Table, TableRow, TableCell, AlignmentType, Media } = window.docx;
 
-                // Tomar captura del contenido del informe
-                const informeContent = document.getElementById("informeContent");
-                const canvas = await html2canvas(informeContent, { scale: 2 });
-                const imgData = canvas.toDataURL("image/png");
+            async function generarWord() {
+                const doc = new Document({
+                    sections: [{
+                        properties: {
+                            page: {
+                                margin: {
+                                    top: 1700,
+                                    right: 1700,
+                                    bottom: 1700,
+                                    left: 1700
+                                }
+                            }
+                        },
+                        children: [
+                            new Paragraph({
+                                text: "Informe de Ecografía",
+                                heading: "Title",
+                                alignment: AlignmentType.CENTER
+                            }),
+                            new Paragraph({ text: `Historia Clínica: ${historiaClinica}` }),
+                            new Paragraph({ text: `Paciente: ${nombrePaciente}` }),
+                            new Paragraph({ text: `Especie: ${especie} - Edad: ${edad} - Sexo: ${sexo}` }),
+                            new Paragraph({ text: `Tipo de Ecografía: ${tipoEco}` }),
+                            new Paragraph({ text: "" }),
 
-                // Crear PDF
-                const pdf = new jsPDF('p', 'pt', 'a4');
-                const pdfWidth = pdf.internal.pageSize.getWidth();
-                const pdfHeight = pdf.internal.pageSize.getHeight();
+                            new Paragraph({ text: "Observaciones:", heading: "Heading1" }),
+                            ...observaciones.map(obs => new Paragraph({
+                                text: `${obs.region}: ${obs.comentario}`
+                            })),
 
-                // Ajustar imagen al ancho de la página
-                const imgProps = pdf.getImageProperties(imgData);
-                const imgRatio = imgProps.width / imgProps.height;
-                let imgHeight = pdfWidth / imgRatio;
-                if (imgHeight > pdfHeight) {
-                    // Si la imagen es más alta que una página, podemos escalarla
-                    imgHeight = pdfHeight;
-                }
+                            new Paragraph({ text: "" }),
+                            new Paragraph({ text: "Conclusiones:", heading: "Heading1" }),
+                            new Paragraph({ text: conclusionesText }),
 
-                pdf.addImage(imgData, 'PNG', 0, 0, pdfWidth, imgHeight);
-                
-                // Guardar el PDF
-                pdf.save(`Informe_${nombrePaciente}_${historiaClinica}.pdf`);
+                            new Paragraph({ text: "" }),
+                            new Paragraph({ text: "Recomendaciones:", heading: "Heading1" }),
+                            new Paragraph({ text: recomendacionesText }),
 
-                // Tras guardar, podemos limpiar sessionStorage y redirigir a landing
+                            new Paragraph({ text: "" }),
+                            new Paragraph({ text: "Imágenes:", heading: "Heading1" }),
+
+                            ...(function() {
+                                const rows = [];
+                                for (let i = 0; i < imagenes.length; i += 2) {
+                                    const cells = [];
+                                    for (let j = i; j < i + 2 && j < imagenes.length; j++) {
+                                        const base64Image = imagenes[j].split(",")[1];
+                                        const imageBuffer = Uint8Array.from(window.atob(base64Image), c => c.charCodeAt(0));
+                                        cells.push(new TableCell({
+                                            children: [
+                                                new Paragraph({
+                                                    children: [
+                                                        Media.addImage(doc, imageBuffer)
+                                                    ]
+                                                })
+                                            ]
+                                        }));
+                                    }
+                                    while (cells.length < 2) {
+                                        cells.push(new TableCell({
+                                            children: [new Paragraph("")],
+                                        }));
+                                    }
+                                    rows.push(new TableRow({ children: cells }));
+                                }
+                                if (rows.length > 0) {
+                                    return [new Table({ rows })];
+                                }
+                                return [new Paragraph("No se han añadido imágenes.")];
+                            })(),
+                        ]
+                    }]
+                });
+
+                const blob = await Packer.toBlob(doc);
+                const url = URL.createObjectURL(blob);
+                const a = document.createElement("a");
+                a.href = url;
+                a.download = `Informe_${nombrePaciente}_${historiaClinica}.docx`;
+                a.click();
+                URL.revokeObjectURL(url);
+            }
+
+            document.getElementById("btnGenerarWord").addEventListener("click", generarWord);
+
+            document.getElementById("btnFinalizar").addEventListener("click", () => {
+                // Limpiar sessionStorage y volver al landing
                 sessionStorage.clear();
                 window.location.href = "landing.html";
             });
