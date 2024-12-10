@@ -1,48 +1,137 @@
 <!DOCTYPE html>
 <html lang="es">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Agregar Imágenes</title>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0"/>    
+    <title>Seleccionar Imágenes</title>
     <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        body {
+            background-color: #1a202c;
+            color: #cbd5e0;
+            font-family: Arial, sans-serif;
+        }
+        .images-container {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px;
+        }
+        .image-item {
+            background: #2d3748;
+            padding: 10px;
+            border: 1px solid #4a5568;
+            position: relative;
+            width: 200px;
+        }
+        .image-item img {
+            max-width: 100%;
+            height: auto;
+        }
+        .reorder-buttons {
+            display: flex;
+            justify-content: space-between;
+            margin-top: 5px;
+        }
+        .reorder-buttons button {
+            font-size: 0.75rem;
+        }
+        .remove-button {
+            background: #e53e3e;
+            color: #fff;
+            font-weight: bold;
+            padding: 2px 5px;
+            border-radius: 3px;
+            position: absolute;
+            top:5px; right:5px;
+            cursor: pointer;
+        }
+    </style>
 </head>
-<body class="bg-gray-900 text-gray-200">
-    <div class="container mx-auto p-5 max-w-md">
-        <h1 class="text-2xl font-bold mb-5 text-center">Agregar Imágenes</h1>
-        <p class="mb-4">Selecciona las imágenes que deseas añadir al informe.</p>
-        <input type="file" id="inputImagenes" class="mb-4" multiple accept="image/*">
-        <div id="preview" class="grid grid-cols-2 gap-2 mb-4"></div>
-        
-        <button id="guardarImagenes" class="w-full bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded">Guardar Imágenes y Continuar</button>
+<body class="p-5">
+    <h1 class="text-3xl text-center mb-5">Selección de Imágenes</h1>
+    <div class="max-w-md mx-auto mb-4">
+        <input type="file" id="imageInput" multiple accept="image/*" class="w-full bg-gray-800 p-2 text-gray-200" />
+    </div>
+    <div class="images-container mx-auto max-w-4xl" id="imagesContainer"></div>
+    <div class="text-center mt-5">
+        <button id="saveImages" class="bg-green-500 hover:bg-green-700 text-white font-bold py-2 px-4 rounded">Guardar Imágenes</button>
     </div>
 
     <script>
-        let imagenes = [];
-        
-        const inputImagenes = document.getElementById('inputImagenes');
-        const preview = document.getElementById('preview');
-        
-        inputImagenes.addEventListener('change', () => {
-            preview.innerHTML = '';
-            imagenes = [];
-            const files = inputImagenes.files;
-            Array.from(files).forEach(file => {
-                const reader = new FileReader();
-                reader.onload = (e) => {
-                    const src = e.target.result;
-                    imagenes.push({ src, descripcion: "" });
-                    const img = document.createElement('img');
-                    img.src = src;
-                    img.classList.add('w-full', 'h-auto', 'border', 'border-gray-600');
-                    preview.appendChild(img);
-                };
-                reader.readAsDataURL(file);
-            });
-        });
+        let images = [];
 
-        document.getElementById('guardarImagenes').addEventListener('click', () => {
-            sessionStorage.setItem('imagenes', JSON.stringify(imagenes));
-            window.location.href = 'conclusiones.html';
+        const imageInput = document.getElementById("imageInput");
+        const imagesContainer = document.getElementById("imagesContainer");
+        const saveImages = document.getElementById("saveImages");
+
+        imageInput.addEventListener("change", handleFileSelection);
+
+        function handleFileSelection(event) {
+            const files = event.target.files;
+            for (let i=0; i<files.length; i++) {
+                const file = files[i];
+                const reader = new FileReader();
+                reader.onload = function(e) {
+                    images.push(e.target.result);
+                    renderImages();
+                }
+                reader.readAsDataURL(file);
+            }
+        }
+
+        function renderImages() {
+            imagesContainer.innerHTML = "";
+            images.forEach((imgData, index) => {
+                const div = document.createElement("div");
+                div.className = "image-item";
+                div.innerHTML = `
+                    <span class="remove-button" data-index="${index}">X</span>
+                    <img src="${imgData}">
+                    <div class="reorder-buttons mt-2">
+                        <button class="bg-blue-500 hover:bg-blue-700 text-white py-1 px-2 rounded move-up" data-index="${index}">↑</button>
+                        <button class="bg-blue-500 hover:bg-blue-700 text-white py-1 px-2 rounded move-down" data-index="${index}">↓</button>
+                    </div>
+                `;
+                imagesContainer.appendChild(div);
+            });
+
+            document.querySelectorAll(".remove-button").forEach(btn => {
+                btn.addEventListener("click", (e) => {
+                    const idx = e.target.getAttribute("data-index");
+                    images.splice(idx, 1);
+                    renderImages();
+                });
+            });
+
+            document.querySelectorAll(".move-up").forEach(btn => {
+                btn.addEventListener("click", (e) => {
+                    const idx = parseInt(e.target.getAttribute("data-index"));
+                    if (idx > 0) {
+                        const temp = images[idx];
+                        images[idx] = images[idx-1];
+                        images[idx-1] = temp;
+                        renderImages();
+                    }
+                });
+            });
+
+            document.querySelectorAll(".move-down").forEach(btn => {
+                btn.addEventListener("click", (e) => {
+                    const idx = parseInt(e.target.getAttribute("data-index"));
+                    if (idx < images.length - 1) {
+                        const temp = images[idx];
+                        images[idx] = images[idx+1];
+                        images[idx+1] = temp;
+                        renderImages();
+                    }
+                });
+            });
+        }
+
+        saveImages.addEventListener("click", () => {
+            sessionStorage.setItem("imagenes", JSON.stringify(images));
+            alert("Imágenes guardadas con éxito.");
+            window.location.href = "conclusiones.html"; // O la siguiente página de tu flujo
         });
     </script>
 </body>
