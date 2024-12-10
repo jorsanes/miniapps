@@ -11,7 +11,6 @@
             color: #cbd5e0;
             font-family: Arial, sans-serif;
         }
-
         .active {
             font-weight: bold;
             color: #48bb78;
@@ -36,6 +35,17 @@
         .text-yellow-500 {
             color: #ecc94b;
         }
+
+        #partialResult {
+            color: #a0aec0; /* gris claro para texto provisional */
+            font-size: 0.875rem;
+            margin-top: 0.5rem;
+            min-height: 1.5rem; /* espacio mínimo para no mover la interfaz */
+        }
+
+        #estado-dictado {
+            margin-top: 0.5rem;
+        }
     </style>
 </head>
 <body>
@@ -44,16 +54,20 @@
         <div id="exploracion-container" class="text-center">
             <p id="region-actual" class="text-xl mb-3">Cargando región...</p>
             <textarea id="comentarios" rows="5" placeholder="Escribe tus observaciones aquí..." class="p-2"></textarea>
-
+            <div id="partialResult"></div>
             <div id="estado-dictado" class="mt-2 text-red-400">Dictado Desactivado</div>
 
-            <div class="flex justify-center mt-5">
-                <button id="btn-dictado" class="bg-green-500 hover:bg-green-700 text-white py-2 px-4 rounded mr-2">Iniciar Dictado</button>
-                <button id="btn-detener-dictado" class="bg-red-500 hover:bg-red-700 text-white py-2 px-4 rounded mr-2">Detener Dictado</button>
-                <button id="btn-anterior" class="bg-gray-500 hover:bg-gray-600 text-white font-bold py-2 px-4 rounded mr-2">
+            <div class="flex justify-center mt-5 flex-wrap gap-2">
+                <button id="btn-dictado" class="bg-green-500 hover:bg-green-700 text-white py-2 px-4 rounded">
+                    Iniciar Dictado
+                </button>
+                <button id="btn-detener-dictado" class="bg-red-500 hover:bg-red-700 text-white py-2 px-4 rounded">
+                    Detener Dictado
+                </button>
+                <button id="btn-anterior" class="bg-gray-500 hover:bg-gray-600 text-white font-bold py-2 px-4 rounded">
                     Atrás
                 </button>
-                <button id="btn-omitir" class="bg-gray-500 hover:bg-gray-600 text-white font-bold py-2 px-4 rounded mr-2">
+                <button id="btn-omitir" class="bg-gray-500 hover:bg-gray-600 text-white font-bold py-2 px-4 rounded">
                     Omitir
                 </button>
                 <button id="btn-siguiente" class="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded">
@@ -94,16 +108,49 @@
         let currentRegionIndex = 0;
 
         let recognition;
+        let isDictationActive = false;
+
         try {
             const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
             recognition = new SpeechRecognition();
             recognition.continuous = true;
+            recognition.interimResults = true;
+            recognition.lang = 'es-ES';
 
             recognition.onresult = (event) => {
-                const textoDictado = Array.from(event.results)
-                    .map((result) => result[0].transcript)
-                    .join('');
-                document.getElementById("comentarios").value += textoDictado;
+                let interimTranscript = '';
+                let finalTranscript = '';
+                for (let i = event.resultIndex; i < event.results.length; i++) {
+                    const transcript = event.results[i][0].transcript;
+                    if (event.results[i].isFinal) {
+                        finalTranscript += transcript.trim() + ' ';
+                    } else {
+                        interimTranscript += transcript;
+                    }
+                }
+
+                if (interimTranscript) {
+                    document.getElementById("partialResult").innerText = "Escuchando: " + interimTranscript;
+                } else {
+                    document.getElementById("partialResult").innerText = "";
+                }
+
+                if (finalTranscript) {
+                    // Agregar el texto final al textarea
+                    const textarea = document.getElementById("comentarios");
+                    textarea.value += finalTranscript;
+                    document.getElementById("partialResult").innerText = "";
+                }
+            };
+
+            recognition.onstart = () => {
+                document.getElementById("estado-dictado").innerText = "Dictado Activado (Hablando...)";
+            };
+
+            recognition.onend = () => {
+                // Si quieres que se reinicie automáticamente, descomenta lo siguiente:
+                // if (isDictationActive) recognition.start();
+                document.getElementById("estado-dictado").innerText = "Dictado Detenido";
             };
 
             recognition.onerror = (event) => {
@@ -116,14 +163,16 @@
         }
 
         document.getElementById("btn-dictado").addEventListener("click", () => {
-            if (recognition) {
+            if (recognition && !isDictationActive) {
+                isDictationActive = true;
                 recognition.start();
-                document.getElementById("estado-dictado").innerText = "Dictado Activado";
+                document.getElementById("estado-dictado").innerText = "Iniciando dictado...";
             }
         });
 
         document.getElementById("btn-detener-dictado").addEventListener("click", () => {
-            if (recognition) {
+            if (recognition && isDictationActive) {
+                isDictationActive = false;
                 recognition.stop();
                 document.getElementById("estado-dictado").innerText = "Dictado Desactivado";
             }
