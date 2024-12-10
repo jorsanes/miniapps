@@ -11,17 +11,6 @@
             color: #cbd5e0;
             font-family: Arial, sans-serif;
         }
-
-        .active {
-            font-weight: bold;
-            color: #48bb78;
-        }
-
-        .inactive {
-            font-weight: normal;
-            color: #f56565;
-        }
-
         textarea {
             background-color: #2d3748;
             color: #cbd5e0;
@@ -29,79 +18,41 @@
             width: 100%;
             resize: none;
         }
-
-        .text-yellow-500 {
-            color: #ecc94b;
-        }
-
-        .btn {
-            @apply bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded;
-        }
-
-        .btn-gray {
-            @apply bg-gray-500 hover:bg-gray-600 text-white font-bold py-2 px-4 rounded;
-        }
-
-        .btn-green {
-            @apply bg-green-500 hover:bg-green-700 text-white font-bold py-2 px-4 rounded;
-        }
-
-        .btn-red {
-            @apply bg-red-500 hover:bg-red-700 text-white font-bold py-2 px-4 rounded;
-        }
-
-        #dictation-status {
-            margin-top: 0.5rem;
-        }
-
-        /* Asegurar que el contenedor de tabla tenga overflow si es necesario */
-        #resumen-container table {
-            width: 100%;
-            border-collapse: collapse;
-        }
-
-        #resumen-container th, #resumen-container td {
-            border: 1px solid #4a5568;
-            padding: 0.5rem;
-        }
     </style>
 </head>
 <body>
     <div class="container mx-auto mt-10 p-5">
         <h1 class="text-3xl text-center mb-5">Exploración</h1>
-
         <div id="exploracion-container" class="text-center">
             <p id="region-actual" class="text-xl mb-3">Cargando región...</p>
             <textarea id="comments" rows="5" placeholder="Escribe tus observaciones aquí..." class="p-2"></textarea>
 
-            <div id="dictation-status" class="inactive">Dictado Desactivado</div>
+            <div id="dictation-status" class="mt-2 text-red-400">Dictado Desactivado</div>
 
             <div class="flex justify-center mt-5 flex-wrap gap-2">
-                <button id="btn-dictado" class="btn-green">Iniciar Dictado</button>
-                <button id="btn-detener-dictado" class="btn-red">Detener Dictado</button>
-                <button id="btn-anterior" class="btn-gray">Atrás</button>
-                <button id="btn-omitir" class="btn-gray">Omitir</button>
-                <button id="btn-siguiente" class="btn">Siguiente</button>
+                <button id="btn-dictado" class="bg-green-500 hover:bg-green-700 text-white font-bold py-2 px-4 rounded">Iniciar Dictado</button>
+                <button id="btn-detener-dictado" class="bg-red-500 hover:bg-red-700 text-white font-bold py-2 px-4 rounded">Detener Dictado</button>
+                <button id="btn-anterior" class="bg-gray-500 hover:bg-gray-600 text-white font-bold py-2 px-4 rounded">Atrás</button>
+                <button id="btn-omitir" class="bg-gray-500 hover:bg-gray-600 text-white font-bold py-2 px-4 rounded">Omitir</button>
+                <button id="btn-siguiente" class="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded">Siguiente</button>
             </div>
         </div>
 
         <div id="resumen-container" class="hidden mt-10">
             <h2 class="text-2xl mb-5">Resumen de Observaciones</h2>
-            <table>
+            <table class="w-full border-collapse border border-gray-700">
                 <thead>
-                    <tr>
-                        <th>Región</th>
-                        <th>Comentario</th>
-                        <th>Propuesta IA</th>
-                        <th>Seleccionar</th>
+                    <tr class="bg-gray-700">
+                        <th class="border border-gray-600 p-2">Región</th>
+                        <th class="border border-gray-600 p-2">Comentario</th>
+                        <th class="border border-gray-600 p-2">Propuesta IA</th>
+                        <th class="border border-gray-600 p-2">Seleccionar</th>
                     </tr>
                 </thead>
-                <tbody id="tabla-resumen">
-                    <!-- Contenido dinámico -->
-                </tbody>
+                <tbody id="tabla-resumen"></tbody>
             </table>
-            <button id="guardar-resumen" class="btn-green mt-5">Guardar Resumen</button>
-            <button id="siguiente-imagenes" class="btn mt-5 hidden">Siguiente</button>
+            <button id="guardar-resumen" class="bg-green-500 hover:bg-green-700 text-white py-2 px-4 rounded mt-5">Guardar Resumen</button>
+            <button id="siguiente-imagenes" class="bg-blue-500 hover:bg-blue-700 text-white py-2 px-4 rounded mt-5 hidden">Siguiente</button>
         </div>
     </div>
 
@@ -117,10 +68,10 @@
             const statusElement = document.getElementById("dictation-status");
             if (estado === "active") {
                 statusElement.textContent = "Dictado Activado";
-                statusElement.className = "active";
+                statusElement.className = "text-green-400";
             } else {
                 statusElement.textContent = "Dictado Desactivado";
-                statusElement.className = "inactive";
+                statusElement.className = "text-red-400";
             }
         }
 
@@ -169,13 +120,8 @@
             }
         }
 
-        document.getElementById("btn-dictado").addEventListener("click", () => {
-            iniciarDictado();
-        });
-
-        document.getElementById("btn-detener-dictado").addEventListener("click", () => {
-            detenerDictado();
-        });
+        document.getElementById("btn-dictado").addEventListener("click", iniciarDictado);
+        document.getElementById("btn-detener-dictado").addEventListener("click", detenerDictado);
 
         document.getElementById("btn-siguiente").addEventListener("click", () => {
             comentariosPorRegion[currentRegionIndex] = document.getElementById("comments").value;
@@ -217,6 +163,7 @@
         function configurarPlantilla() {
             const urlParams = new URLSearchParams(window.location.search);
             const plantilla = urlParams.get('plantilla');
+
             if (plantilla === "Abdominal") {
                 regionList.push("Vejiga", "Próstata / Útero", "Riñón Izquierdo", "Bazo", "Estómago", "Hígado y Vesícula", "Riñón Derecho", "Páncreas", "Glándulas Adrenales", "Asas Intestinales", "Ganglios Linfáticos", "Cavidad Abdominal");
             } else if (plantilla === "Cuello") {
@@ -249,10 +196,12 @@
                 const comentario = comentariosPorRegion[i] || "Omitido";
                 const row = document.createElement("tr");
                 row.innerHTML = `
-                    <td>${regionList[i]}</td>
-                    <td><textarea class="w-full bg-gray-800 text-white border border-gray-600 p-1">${comentario}</textarea></td>
-                    <td class="text-yellow-500">En construcción</td>
-                    <td>
+                    <td class="border border-gray-600 p-2">${regionList[i]}</td>
+                    <td class="border border-gray-600 p-2">
+                        <textarea class="w-full bg-gray-800 text-white border border-gray-600 p-1">${comentario}</textarea>
+                    </td>
+                    <td class="border border-gray-600 p-2 text-yellow-500">En construcción</td>
+                    <td class="border border-gray-600 p-2">
                         <select>
                             <option value="original">Original</option>
                         </select>
