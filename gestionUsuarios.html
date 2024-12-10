@@ -4,41 +4,77 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0"/> 
     <title>Gestión de Usuarios</title>
-    <style>
-        table {
-            border-collapse: collapse;
-            width: 100%;
-            margin:20px 0;
-        }
-        th, td {
-            border:1px solid #ccc;
-            padding:10px;
-            text-align:left;
-        }
-        th {
-            background:#f0f0f0;
-        }
-        button {
-            padding:5px 10px;
-        }
-    </style>
+    <script src="https://cdn.tailwindcss.com"></script>
 </head>
-<body>
-    <h1>Gestión de Usuarios</h1>
-    <table>
-        <thead>
-            <tr>
-                <th>Email</th>
-                <th>Nombre</th>
-                <th>Apellidos</th>
-                <th>Centro</th>
-                <th>Rol</th>
-                <th>Estado</th>
-                <th>Acciones</th>
-            </tr>
-        </thead>
-        <tbody id="usersTableBody"></tbody>
-    </table>
+<body class="bg-gray-900 text-gray-200">
+    <div class="container mx-auto py-10 max-w-4xl">
+        <h1 class="text-3xl font-bold mb-6 text-center">Gestión de Usuarios</h1>
+        
+        <div class="flex justify-end mb-4">
+            <button id="btnAddUser" class="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded">Añadir Usuario</button>
+        </div>
+
+        <div class="overflow-x-auto">
+            <table class="w-full text-left border-collapse">
+                <thead>
+                    <tr class="bg-gray-700">
+                        <th class="p-3 border-b border-gray-600">Email</th>
+                        <th class="p-3 border-b border-gray-600">Nombre</th>
+                        <th class="p-3 border-b border-gray-600">Apellidos</th>
+                        <th class="p-3 border-b border-gray-600">Centro</th>
+                        <th class="p-3 border-b border-gray-600">Rol</th>
+                        <th class="p-3 border-b border-gray-600">Estado</th>
+                        <th class="p-3 border-b border-gray-600">Acciones</th>
+                    </tr>
+                </thead>
+                <tbody id="usersTableBody" class="bg-gray-800">
+                    <!-- Se generará dinámicamente -->
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <!-- Modal para añadir usuario -->
+    <div id="addUserModal" class="fixed inset-0 flex items-center justify-center bg-black bg-opacity-50 hidden">
+        <div class="bg-gray-800 p-6 rounded-lg shadow-lg w-full max-w-sm">
+            <h2 class="text-2xl font-bold mb-4 text-center">Añadir Usuario</h2>
+            <form id="addUserForm" class="space-y-4">
+                <div>
+                    <label for="addEmail" class="block mb-2">Correo Electrónico</label>
+                    <input type="email" id="addEmail" class="w-full p-2 rounded bg-gray-700 text-gray-200" required />
+                </div>
+                <div>
+                    <label for="addPassword" class="block mb-2">Contraseña</label>
+                    <input type="password" id="addPassword" class="w-full p-2 rounded bg-gray-700 text-gray-200" required />
+                </div>
+                <div>
+                    <label for="addNombre" class="block mb-2">Nombre</label>
+                    <input type="text" id="addNombre" class="w-full p-2 rounded bg-gray-700 text-gray-200" required />
+                </div>
+                <div>
+                    <label for="addApellidos" class="block mb-2">Apellidos</label>
+                    <input type="text" id="addApellidos" class="w-full p-2 rounded bg-gray-700 text-gray-200" required />
+                </div>
+                <div>
+                    <label for="addCentro" class="block mb-2">Centro de Trabajo</label>
+                    <input type="text" id="addCentro" class="w-full p-2 rounded bg-gray-700 text-gray-200" required />
+                </div>
+                <div>
+                    <label for="addRol" class="block mb-2">Rol</label>
+                    <select id="addRol" class="w-full p-2 rounded bg-gray-700 text-gray-200" required>
+                        <option value="usuario">Usuario</option>
+                        <option value="admin">Admin</option>
+                    </select>
+                </div>
+                
+                <div class="flex justify-end space-x-2">
+                    <button type="button" id="cancelAddUser" class="bg-gray-600 hover:bg-gray-700 text-white font-bold py-2 px-4 rounded">Cancelar</button>
+                    <button type="submit" class="bg-green-500 hover:bg-green-700 text-white font-bold py-2 px-4 rounded">Guardar</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
     <script>
     document.addEventListener("DOMContentLoaded", () => {
         const usuarioLogeado = JSON.parse(sessionStorage.getItem("usuarioLogeado"));
@@ -47,42 +83,99 @@
             return;
         }
 
-        const usuarios = JSON.parse(localStorage.getItem("usuarios")) || [];
+        let usuarios = JSON.parse(localStorage.getItem("usuarios")) || [];
         const tbody = document.getElementById("usersTableBody");
 
-        // Renderizar la tabla
-        usuarios.forEach((u, index) => {
-            const tr = document.createElement("tr");
-            
-            // Datos de las celdas
-            tr.innerHTML = `
-                <td>${u.email}</td>
-                <td>${u.nombre}</td>
-                <td>${u.apellidos}</td>
-                <td>${u.centro}</td>
-                <td>${u.rol}</td>
-                <td>
-                    <select data-index="${index}" class="estadoSelect">
-                        <option value="activo" ${u.estado === "activo" ? "selected":""}>activo</option>
-                        <option value="congelado" ${u.estado === "congelado" ? "selected":""}>congelado</option>
-                    </select>
-                </td>
-                <td><button class="guardarBtn" data-index="${index}">Guardar</button></td>
-            `;
-            tbody.appendChild(tr);
+        function renderUsuarios() {
+            tbody.innerHTML = "";
+            usuarios.forEach((u, index) => {
+                const tr = document.createElement("tr");
+                tr.className = "border-b border-gray-700 hover:bg-gray-700";
+                tr.innerHTML = `
+                    <td class="p-3">${u.email}</td>
+                    <td class="p-3">${u.nombre}</td>
+                    <td class="p-3">${u.apellidos}</td>
+                    <td class="p-3">${u.centro}</td>
+                    <td class="p-3">${u.rol}</td>
+                    <td class="p-3">
+                        <select data-index="${index}" class="estadoSelect bg-gray-700 text-gray-200 rounded p-1">
+                            <option value="activo" ${u.estado === "activo" ? "selected" : ""}>activo</option>
+                            <option value="congelado" ${u.estado === "congelado" ? "selected" : ""}>congelado</option>
+                        </select>
+                    </td>
+                    <td class="p-3">
+                        <button class="guardarBtn bg-blue-500 hover:bg-blue-700 text-white font-bold py-1 px-2 rounded" data-index="${index}">Guardar</button>
+                    </td>
+                `;
+                tbody.appendChild(tr);
+            });
+
+            document.querySelectorAll(".guardarBtn").forEach(btn => {
+                btn.addEventListener("click", (e) => {
+                    const idx = e.target.getAttribute("data-index");
+                    const select = document.querySelector(`.estadoSelect[data-index="${idx}"]`);
+                    const nuevoEstado = select.value;
+                    usuarios[idx].estado = nuevoEstado;
+                    guardarUsuarios();
+                    alert("Estado actualizado con éxito.");
+                });
+            });
+        }
+
+        function guardarUsuarios() {
+            localStorage.setItem("usuarios", JSON.stringify(usuarios));
+        }
+
+        renderUsuarios();
+
+        // Lógica para mostrar/ocultar el modal de añadir usuario
+        const addUserModal = document.getElementById("addUserModal");
+        const btnAddUser = document.getElementById("btnAddUser");
+        const cancelAddUser = document.getElementById("cancelAddUser");
+        const addUserForm = document.getElementById("addUserForm");
+
+        btnAddUser.addEventListener("click", () => {
+            addUserModal.classList.remove("hidden");
         });
 
-        // Evento para guardar cambios
-        document.querySelectorAll(".guardarBtn").forEach(btn => {
-            btn.addEventListener("click", (e) => {
-                const idx = e.target.getAttribute("data-index");
-                const select = document.querySelector(`.estadoSelect[data-index="${idx}"]`);
-                const nuevoEstado = select.value;
-                
-                usuarios[idx].estado = nuevoEstado;
-                localStorage.setItem("usuarios", JSON.stringify(usuarios));
-                alert("Estado actualizado con éxito.");
-            });
+        cancelAddUser.addEventListener("click", () => {
+            addUserModal.classList.add("hidden");
+        });
+
+        // Añadir nuevo usuario manualmente
+        addUserForm.addEventListener("submit", (e) => {
+            e.preventDefault();
+            const email = document.getElementById("addEmail").value;
+            const password = document.getElementById("addPassword").value;
+            const nombre = document.getElementById("addNombre").value;
+            const apellidos = document.getElementById("addApellidos").value;
+            const centro = document.getElementById("addCentro").value;
+            const rol = document.getElementById("addRol").value;
+
+            // Verificar si ya existe ese usuario
+            const existe = usuarios.find(u => u.email === email);
+            if (existe) {
+                alert("Ya existe un usuario con ese correo.");
+                return;
+            }
+
+            const nuevoUsuario = {
+                email,
+                password,
+                nombre,
+                apellidos,
+                centro,
+                rol,
+                estado: "activo",
+                fechaRegistro: new Date().toISOString()
+            };
+
+            usuarios.push(nuevoUsuario);
+            guardarUsuarios();
+            renderUsuarios();
+            addUserModal.classList.add("hidden");
+            addUserForm.reset();
+            alert("Usuario añadido con éxito.");
         });
     });
     </script>
