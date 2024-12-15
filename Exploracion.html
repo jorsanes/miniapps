@@ -18,6 +18,13 @@
             width: 100%;
             resize: none;
         }
+        .active {
+            font-weight: bold;
+            color: #48bb78;
+        }
+        .inactive {
+            color: #f56565;
+        }
     </style>
 </head>
 <body>
@@ -26,9 +33,7 @@
         <div id="exploracion-container" class="text-center">
             <p id="region-actual" class="text-xl mb-3">Cargando región...</p>
             <textarea id="comments" rows="5" placeholder="Escribe tus observaciones aquí..." class="p-2"></textarea>
-
-            <div id="dictation-status" class="mt-2 text-red-400">Dictado Desactivado</div>
-
+            <div id="dictation-status" class="mt-2 inactive">Dictado Desactivado</div>
             <div class="flex justify-center mt-5 flex-wrap gap-2">
                 <button id="btn-dictado" class="bg-green-500 hover:bg-green-700 text-white font-bold py-2 px-4 rounded">Iniciar Dictado</button>
                 <button id="btn-detener-dictado" class="bg-red-500 hover:bg-red-700 text-white font-bold py-2 px-4 rounded">Detener Dictado</button>
@@ -37,12 +42,11 @@
                 <button id="btn-siguiente" class="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded">Siguiente</button>
             </div>
         </div>
-
         <div id="resumen-container" class="hidden mt-10">
             <h2 class="text-2xl mb-5">Resumen de Observaciones</h2>
-            <table class="w-full border-collapse border border-gray-700">
+            <table class="table-auto w-full border-collapse border border-gray-700">
                 <thead>
-                    <tr class="bg-gray-700">
+                    <tr>
                         <th class="border border-gray-600 p-2">Región</th>
                         <th class="border border-gray-600 p-2">Comentario</th>
                         <th class="border border-gray-600 p-2">Propuesta IA</th>
@@ -51,77 +55,58 @@
                 </thead>
                 <tbody id="tabla-resumen"></tbody>
             </table>
-            <button id="guardar-resumen" class="bg-green-500 hover:bg-green-700 text-white py-2 px-4 rounded mt-5">Guardar Resumen</button>
-            <button id="siguiente-imagenes" class="bg-blue-500 hover:bg-blue-700 text-white py-2 px-4 rounded mt-5 hidden">Siguiente</button>
+            <button id="guardar-resumen" class="bg-green-500 hover:bg-green-700 text-white py-2 px-4 rounded mt-5">
+                Guardar Resumen
+            </button>
+            <button id="siguiente-imagenes" class="bg-blue-500 hover:bg-blue-700 text-white py-2 px-4 rounded mt-5 hidden">
+                Siguiente
+            </button>
         </div>
     </div>
 
     <script>
         let recognition;
         let isListening = false;
-
         const regionList = [];
         const comentariosPorRegion = [];
         let currentRegionIndex = 0;
 
-        function actualizarEstadoDictado(estado) {
-            const statusElement = document.getElementById("dictation-status");
-            if (estado === "active") {
-                statusElement.textContent = "Dictado Activado";
-                statusElement.className = "text-green-400";
-            } else {
-                statusElement.textContent = "Dictado Desactivado";
-                statusElement.className = "text-red-400";
-            }
-        }
+        function configurarPlantilla() {
+            const urlParams = new URLSearchParams(window.location.search);
+            const plantilla = urlParams.get('plantilla');
 
-        function iniciarDictado() {
-            if (!('webkitSpeechRecognition' in window)) {
-                alert("Tu navegador no soporta reconocimiento de voz.");
+            if (!plantilla) {
+                alert("No se ha seleccionado ninguna plantilla. Redirigiendo al formulario...");
+                window.location.href = "formulario.html";
                 return;
             }
 
-            if (!recognition) {
-                recognition = new webkitSpeechRecognition();
-                recognition.lang = "es-ES";
-                recognition.continuous = false;
-                recognition.interimResults = false;
-
-                recognition.onstart = () => {
-                    isListening = true;
-                    actualizarEstadoDictado("active");
-                };
-
-                recognition.onresult = (event) => {
-                    const comments = document.getElementById("comments");
-                    const transcript = event.results[0][0].transcript.trim();
-                    comments.value += (comments.value ? " " : "") + transcript;
-                };
-
-                recognition.onerror = (event) => {
-                    console.error("Error en el dictado:", event);
-                    alert("Hubo un problema con el dictado. Por favor, intenta de nuevo.");
-                };
-
-                recognition.onend = () => {
-                    isListening = false;
-                    actualizarEstadoDictado("inactive");
-                };
-            }
-
-            recognition.start();
-        }
-
-        function detenerDictado() {
-            if (recognition && isListening) {
-                isListening = false;
-                recognition.stop();
-                actualizarEstadoDictado("inactive");
+            switch (plantilla) {
+                case "Abdominal":
+                    regionList.push("Vejiga", "Próstata / Útero", "Riñón Izquierdo", "Bazo", "Estómago", "Hígado y Vesícula", "Riñón Derecho", "Páncreas", "Glándulas Adrenales", "Asas Intestinales", "Ganglios Linfáticos", "Cavidad Abdominal");
+                    break;
+                case "Cuello":
+                    regionList.push("Tiroides", "Linfónodos", "Glándulas Salivares");
+                    break;
+                case "Cardiaca":
+                    regionList.push("Ventana Paraesternal Derecha", "Ventana Paraesternal Izquierda", "Ventana Subcostal Subxifoidea", "Valoración de Flujos", "Valoración de Turbulencias");
+                    break;
+                default:
+                    alert("Plantilla no reconocida. Redirigiendo al formulario...");
+                    window.location.href = "formulario.html";
+                    break;
             }
         }
 
-        document.getElementById("btn-dictado").addEventListener("click", iniciarDictado);
-        document.getElementById("btn-detener-dictado").addEventListener("click", detenerDictado);
+        function cargarRegion(index) {
+            if (index >= regionList.length) {
+                mostrarResumen();
+                return;
+            }
+            document.getElementById("region-actual").innerText = regionList[index];
+            document.getElementById("comments").value = comentariosPorRegion[index] || "";
+            currentRegionIndex = index;
+        }
 
         document.getElementById("btn-siguiente").addEventListener("click", () => {
             comentariosPorRegion[currentRegionIndex] = document.getElementById("comments").value;
@@ -140,55 +125,9 @@
             cargarRegion(currentRegionIndex + 1);
         });
 
-        document.getElementById("guardar-resumen").addEventListener("click", () => {
-            const resumen = [];
-            const filas = document.querySelectorAll("#tabla-resumen tr");
-
-            filas.forEach((fila, index) => {
-                const region = regionList[index];
-                const comentario = fila.querySelector("textarea").value;
-                const seleccion = fila.querySelector("select").value;
-                resumen.push({ region, comentario, seleccion });
-            });
-
-            sessionStorage.setItem('observaciones', JSON.stringify(resumen));
-            alert("Resumen guardado. Puedes pasar a la siguiente fase.");
-            document.getElementById("siguiente-imagenes").classList.remove('hidden');
-        });
-
-        document.getElementById("siguiente-imagenes").addEventListener('click', () => {
-            window.location.href = 'imagenes.html';
-        });
-
-        function configurarPlantilla() {
-            const urlParams = new URLSearchParams(window.location.search);
-            const plantilla = urlParams.get('plantilla');
-
-            if (plantilla === "Abdominal") {
-                regionList.push("Vejiga", "Próstata / Útero", "Riñón Izquierdo", "Bazo", "Estómago", "Hígado y Vesícula", "Riñón Derecho", "Páncreas", "Glándulas Adrenales", "Asas Intestinales", "Ganglios Linfáticos", "Cavidad Abdominal");
-            } else if (plantilla === "Cuello") {
-                regionList.push("Tiroides", "Linfónodos", "Glándulas Salivares");
-            } else if (plantilla === "Cardiaca") {
-                regionList.push("Ventana Paraesternal Derecha", "Ventana Paraesternal Izquierda", "Ventana Subcostal Subxifoidea", "Valoración de Flujos", "Valoración de Turbulencias");
-            } else {
-                alert("Plantilla no reconocida. Por favor regrese al formulario.");
-            }
-        }
-
-        function cargarRegion(index) {
-            if (index >= regionList.length) {
-                mostrarResumen();
-                return;
-            }
-            document.getElementById("region-actual").innerText = regionList[index];
-            document.getElementById("comments").value = comentariosPorRegion[index] || "";
-            currentRegionIndex = index;
-        }
-
-        function mostrarResumen() {
+        async function mostrarResumen() {
             document.getElementById("exploracion-container").classList.add("hidden");
             document.getElementById("resumen-container").classList.remove("hidden");
-
             const tablaResumen = document.getElementById("tabla-resumen");
             tablaResumen.innerHTML = "";
 
@@ -205,14 +144,36 @@
                         <select>
                             <option value="original">Original</option>
                         </select>
-                    </td>
-                `;
+                    </td>`;
                 tablaResumen.appendChild(row);
             }
         }
 
+        document.getElementById("guardar-resumen").addEventListener("click", () => {
+            const resumen = [];
+            const filas = document.querySelectorAll("#tabla-resumen tr");
+
+            filas.forEach((fila, index) => {
+                const region = regionList[index];
+                const comentario = fila.querySelector("textarea").value;
+                const seleccion = fila.querySelector("select").value;
+                resumen.push({ region, comentario, seleccion });
+            });
+
+            console.log("Datos para exportar:", resumen);
+            sessionStorage.setItem('observaciones', JSON.stringify(resumen));
+            alert("Resumen guardado. Puedes pasar a la siguiente fase.");
+            document.getElementById("siguiente-imagenes").classList.remove('hidden');
+        });
+
+        document.getElementById("siguiente-imagenes").addEventListener('click', () => {
+            window.location.href = 'imagenes.html';
+        });
+
         configurarPlantilla();
         cargarRegion(0);
+    </script>
+
     <script src="auth.js"></script>
     <script>
         checkAuthentication();
