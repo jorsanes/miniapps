@@ -64,6 +64,12 @@
                 adminOptions.style.display = 'block';
             }
         }
+    <button id="logoutButton" class="btn">Cerrar Sesión</button>
+    <script>
+        document.getElementById('logoutButton').addEventListener('click', () => {
+            sessionStorage.clear();
+            window.location.href = "login.html";
+        });
     </script>
 </body>
 </html>
