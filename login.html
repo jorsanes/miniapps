@@ -33,7 +33,7 @@
         // Cargar o inicializar el array de usuarios
         let usuarios = JSON.parse(localStorage.getItem('usuarios')) || [];
 
-        // Asegurar existencia del administrador
+        // Crear usuario administrador por defecto si no existe
         const adminEmail = "jorsanes@hotmail.com";
         const adminPass = "joridoxx";
         const adminExiste = usuarios.some(u => u.email === adminEmail);
@@ -42,7 +42,7 @@
                 email: adminEmail,
                 password: adminPass,
                 nombre: "Jorge",
-                apellidos: "Sanes",
+                apellidos: "Sánchez",
                 centro: "Centro Admin",
                 rol: "admin",
                 estado: "activo",
@@ -71,7 +71,6 @@
                 const ahora = new Date();
                 const diffTime = ahora - fechaRegistro;
                 const diffDays = diffTime / (1000 * 60 * 60 * 24);
-                // Si han pasado más de 7 días y está activo, congelar
                 if (diffDays > 7 && usuario.estado === "activo") {
                     usuario.estado = "congelado";
                     guardarUsuarios();
@@ -94,6 +93,7 @@
             const errorMessage = document.getElementById('errorMessage');
 
             if (resultado.exito) {
+                // Guardar los datos del usuario autenticado en sessionStorage
                 sessionStorage.setItem('usuarioLogeado', JSON.stringify({
                     email: resultado.usuario.email,
                     nombre: resultado.usuario.nombre,
@@ -101,6 +101,7 @@
                     centro: resultado.usuario.centro,
                     rol: resultado.usuario.rol
                 }));
+                // Redirigir al landing
                 window.location.href = "landing.html";
             } else {
                 errorMessage.textContent = resultado.mensaje;
